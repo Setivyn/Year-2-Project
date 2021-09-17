@@ -6,22 +6,23 @@ using System.Diagnostics.Tracing;
 using System.Drawing;
 using UnityEditor;
 
-public class MainTestBehaviour : MonoBehaviour
+public class TerrainVisualiseLogic : MonoBehaviour
 {
     TerMat Matrix;
     [SerializeField] Material meshMat;
 
     void Start()
     {
-        int lenPow = 7;
+        int lenPow = 5;
         int lenFull = Convert.ToInt32(Math.Pow(2, lenPow) + 1);
+        int seed = Guid.NewGuid().GetHashCode();
 
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
         var MR = gameObject.AddComponent<MeshRenderer>();
         MR.sharedMaterial = meshMat;
         //Generate Matrix and assign to mesh filter
-        Matrix = new TerMat(lenPow);
+        Matrix = new TerMat(lenPow, seed);
         MF.mesh = CreateMesh(Matrix, lenFull);
     }
 

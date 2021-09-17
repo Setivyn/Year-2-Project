@@ -12,23 +12,24 @@ public class TerMat : MonoBehaviour
     protected System.Random rand;
     protected List<int[]> Centers; //List of Centers, reset for each layer
 
-    public TerMat(int SidePow)
+    public TerMat(int SidePow, int seed)
     {
         Centers = new List<int[]>();
-        seed = Guid.NewGuid().GetHashCode(); //Stored seed to reference later, for saving purposes, also to maintain consistency throughout code
         rand = new System.Random(seed); //Generate a new set of random values, global to avoid repeats as using single seed for simulation
         sideLenIndex = Convert.ToInt32(Mathf.Pow(2, SidePow));
-        altitudeMap = new double[(2 * sideLenIndex) + 1, (2 * sideLenIndex) + 1];
+        altitudeMap = new double[(sideLenIndex) + 1, (sideLenIndex) + 1];
         matSize = (2 * sideLenIndex);
+        startCent = new int[2];
 
 
 
         //Initialise first grid values, as these are set differently.
-        SetCorners(startCent, sideLenIndex);
+        Debug.Log(sideLenIndex);
         startCent[0] = sideLenIndex / 2;
         startCent[1] = startCent[0];
         Centers.Add(startCent);
-        altitudeMap[Centers[0][0], Centers[0][1]] = AveragePointsCenter(sideLenIndex / 2, Centers[0]);
+        SetCorners(Centers[0], sideLenIndex);
+        altitudeMap[Centers[0][0], Centers[0][1]] = AveragePointsCenter(sideLenIndex, Centers[0]);
 
 
         DiamondSquare(SidePow - 1);
@@ -37,8 +38,9 @@ public class TerMat : MonoBehaviour
     void DiamondSquare(int sidePow)
     {
         List<int[]> TempCenters = new List<int[]>(); //Find new Centers, to be operated on for this iteration
-        Centers.ForEach(delegate (int[] Center) {
-            TempCenters = FindSubCenters(Center, sidePow);
+        Centers.ForEach(delegate (int[] Center) 
+        {
+            TempCenters.AddRange(FindSubCenters(Center, sidePow - 1));
         });
         Centers = TempCenters;
         TempCenters = new List<int[]>();
@@ -50,7 +52,7 @@ public class TerMat : MonoBehaviour
         });
 
         Centers.ForEach(delegate (int[] Center) { //Find & Set edges corresponding to each center
-            SetEdgesForCenter(Center, sidePow);
+            SetEdgesForCenter(Center, sidePow - 1);
         });
 
         DiamondSquare(sidePow - 1); 
@@ -58,13 +60,50 @@ public class TerMat : MonoBehaviour
 
     private List<int[]> FindSubCenters(int[] center, int sidePow)
     {
-        throw new NotImplementedException();
+        List<int[]> SubCenters = new List<int[]>();
+        int[] TempCenter = new int[2];
+        int Length = Convert.ToInt32(Mathf.Pow(2, sidePow));
+        int xMod, yMod;
+        double k, j;
+        j = 0;
+
+        for(int i = 0; i < 4; i++)
+        {
+            k = j / 2;
+            xMod = (2 * (i % 2)) - 1;
+            yMod = 2 * Convert.ToInt32(Math.Floor(k)) - 1;
+            TempCenter[0] = center[0] + xMod * Length;
+            TempCenter[1] = center[1] + yMod * Length;
+            SubCenters.Add(TempCenter);
+            j++;
+
+        }
+
+        return SubCenters;
     }
 
     private void SetEdgesForCenter(int[] center, int sidePow)
     {
         int chunkLen = Convert.ToInt32(Mathf.Pow(2, sidePow));
+        int x, y;
+        for (int i = 0; i < 4; i++)
+        {
+            x = center[0] + (Convert.ToInt32(Mathf.Sin(Mathf.PI * i / 2)) * chunkLen);
+            y = center[1] + (Convert.ToInt32(Mathf.Cos(Mathf.PI * i / 2)) * chunkLen);
+            altitudeMap[x, y] = EdgeSum(x, y, chunkLen);
+        }
+    }
 
+    private double EdgeSum(int x, int y, int chunkLen)
+    {
+        double total = 0;
+        if (x + chunkLen <= sideLenIndex){total += altitudeMap[x + chunkLen, y]; }
+        if (y + chunkLen <= sideLenIndex){total += altitudeMap[x, y + chunkLen];}
+        if (x - chunkLen >= 0){total += altitudeMap[x - chunkLen, y];}
+        if (y - chunkLen >= 0){total += altitudeMap[x, y - chunkLen];}
+
+        total = total / 4;
+        return total;
     }
 
     void SetCenter(int sideLenPow, int[] Center)
@@ -75,9 +114,10 @@ public class TerMat : MonoBehaviour
         altitudeMap[Center[0], Center[1]] = AveragePointsCenter(chunkLen, Center) + noise;
     }
 
-    double AveragePointsCenter(int halfLen, int[] centerIndex)
+    double AveragePointsCenter(int Len, int[] centerIndex)
     {
         double total = 0;
+        int halfLen = Len / 2;
         total += altitudeMap[PointMinusLen(centerIndex, 0, halfLen), PointMinusLen(centerIndex, 1, halfLen)];
         total += altitudeMap[PointMinusLen(centerIndex, 0, halfLen), PointPlusLen(centerIndex, 1, halfLen)];
         total += altitudeMap[PointPlusLen(centerIndex, 0, halfLen), PointMinusLen(centerIndex, 1, halfLen)];
