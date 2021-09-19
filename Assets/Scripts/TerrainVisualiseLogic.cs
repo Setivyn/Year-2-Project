@@ -47,7 +47,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         outMesh.triangles = SetTriangles(newVertices, sideLen);
 
         //Set Colours based on height [Temporary, for proof of concept.]
-        outMesh.colors32 = SetColours(newVertices, maxY);
+        //outMesh.colors32 = SetColours(newVertices, maxY);
 
         //Standard Recalculations
         outMesh.RecalculateNormals();

@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class TerMat : MonoBehaviour
+public class TerMat
 {
     protected double[,] altitudeMap;
     protected int[] startCent;
@@ -24,7 +24,6 @@ public class TerMat : MonoBehaviour
 
 
         //Initialise first grid values, as these are set differently.
-        Debug.Log(sideLenIndex);
         startCent[0] = sideLenIndex / 2;
         startCent[1] = startCent[0];
         Centers.Add(startCent);
@@ -55,7 +54,7 @@ public class TerMat : MonoBehaviour
             SetEdgesForCenter(Center, sidePow - 1);
         });
 
-        DiamondSquare(sidePow - 1); 
+        if (sidePow != 0) {DiamondSquare(sidePow - 1);}
     }
 
     private List<int[]> FindSubCenters(int[] center, int sidePow)
