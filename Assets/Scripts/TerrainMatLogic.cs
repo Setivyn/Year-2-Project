@@ -36,9 +36,15 @@ public class TerMat
 
     void DiamondSquare(int sidePow)
     {
+        int counterSubCenter, counterCenter, counterEdges;
+        counterSubCenter = 0;
+        counterCenter = 0;
+        counterEdges = 0;
+
         List<int[]> TempCenters = new List<int[]>(); //Find new Centers, to be operated on for this iteration
         Centers.ForEach(delegate (int[] Center) 
         {
+            counterSubCenter += 1;
             TempCenters.AddRange(FindSubCenters(Center, sidePow - 1));
         });
         Centers = TempCenters;
@@ -47,13 +53,16 @@ public class TerMat
 
         Centers.ForEach(delegate (int[] Center) //Sets values for all found centers, based on corners given
         {
+            counterCenter += 1;
             SetCenter(sidePow, Center);
         });
 
         Centers.ForEach(delegate (int[] Center) { //Find & Set edges corresponding to each center
+            counterEdges += 1;
             SetEdgesForCenter(Center, sidePow - 1);
         });
 
+        Debug.Log("SubCenters: " + counterSubCenter + ", Centers Set: " + counterCenter + ", Edges Set: " + counterEdges * 4);
         if (sidePow != 0) {DiamondSquare(sidePow - 1);}
     }
 
@@ -73,11 +82,13 @@ public class TerMat
             yMod = 2 * Convert.ToInt32(Math.Floor(k)) - 1;
             TempCenter[0] = center[0] + xMod * Length;
             TempCenter[1] = center[1] + yMod * Length;
+            //Debug.Log(TempCenter[0] + "," + TempCenter[1]);
             SubCenters.Add(TempCenter);
+            Debug.Log("``" + SubCenters[SubCenters.Count - 1][0] + "," + SubCenters[SubCenters.Count - 1][1]);
             j++;
 
-        }
-
+        } //Fault Here: SubCenters should be taking in 4 unique values, and apparently does so, but ends up having the same value 4 times. 
+        SubCenters.ForEach(Center => Debug.Log("`" + Center[0] + "," + Center[1]));
         return SubCenters;
     }
 
