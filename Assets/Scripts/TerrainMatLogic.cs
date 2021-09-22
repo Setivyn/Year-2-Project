@@ -18,7 +18,6 @@ public class TerMat
         rand = new System.Random(seed); //Generate a new set of random values, global to avoid repeats as using single seed for simulation
         sideLenIndex = Convert.ToInt32(Mathf.Pow(2, SidePow));
         altitudeMap = new double[(sideLenIndex) + 1, (sideLenIndex) + 1];
-        matSize = (2 * sideLenIndex);
         startCent = new int[2];
 
 
@@ -29,22 +28,18 @@ public class TerMat
         Centers.Add(startCent);
         SetCorners(Centers[0], sideLenIndex);
         altitudeMap[Centers[0][0], Centers[0][1]] = AveragePointsCenter(sideLenIndex, Centers[0]);
-
+        Debug.Log(altitudeMap[startCent[0], startCent[1]]);
+        SetEdgesForCenter(Centers[0], SidePow - 1);
 
         DiamondSquare(SidePow - 1);
     }
 
     void DiamondSquare(int sidePow)
     {
-        int counterSubCenter, counterCenter, counterEdges;
-        counterSubCenter = 0;
-        counterCenter = 0;
-        counterEdges = 0;
 
         List<int[]> TempCenters = new List<int[]>(); //Find new Centers, to be operated on for this iteration
         Centers.ForEach(delegate (int[] Center) 
         {
-            counterSubCenter += 1;
             TempCenters.AddRange(FindSubCenters(Center, sidePow - 1));
         });
         Centers = TempCenters;
@@ -53,23 +48,21 @@ public class TerMat
 
         Centers.ForEach(delegate (int[] Center) //Sets values for all found centers, based on corners given
         {
-            counterCenter += 1;
-            SetCenter(sidePow, Center);
+            SetCenter(sidePow - 1, Center);
         });
 
-        Centers.ForEach(delegate (int[] Center) { //Find & Set edges corresponding to each center
-            counterEdges += 1;
+        Centers.ForEach(delegate (int[] Center) //Find & Set edges corresponding to each center
+            { 
             SetEdgesForCenter(Center, sidePow - 1);
         });
 
-        Debug.Log("SubCenters: " + counterSubCenter + ", Centers Set: " + counterCenter + ", Edges Set: " + counterEdges * 4);
-        if (sidePow != 0) {DiamondSquare(sidePow - 1);}
+        if (sidePow > 1) {DiamondSquare(sidePow - 1);}
     }
 
     private List<int[]> FindSubCenters(int[] center, int sidePow)
     {
-        List<int[]> SubCenters = new List<int[]>();
-        int[] TempCenter = new int[2];
+        int[][] SubCenters = new int[4][];
+        List<int[]> RetCenters = new List<int[]>();
         int Length = Convert.ToInt32(Mathf.Pow(2, sidePow));
         int xMod, yMod;
         double k, j;
@@ -77,19 +70,20 @@ public class TerMat
 
         for(int i = 0; i < 4; i++)
         {
+            SubCenters[i] = new int[2];
             k = j / 2;
             xMod = (2 * (i % 2)) - 1;
             yMod = 2 * Convert.ToInt32(Math.Floor(k)) - 1;
-            TempCenter[0] = center[0] + xMod * Length;
-            TempCenter[1] = center[1] + yMod * Length;
-            //Debug.Log(TempCenter[0] + "," + TempCenter[1]);
-            SubCenters.Add(TempCenter);
-            Debug.Log("``" + SubCenters[SubCenters.Count - 1][0] + "," + SubCenters[SubCenters.Count - 1][1]);
+            SubCenters[i][0] = center[0] + xMod * Length;
+            SubCenters[i][1] = center[1] + yMod * Length;
             j++;
 
-        } //Fault Here: SubCenters should be taking in 4 unique values, and apparently does so, but ends up having the same value 4 times. 
-        SubCenters.ForEach(Center => Debug.Log("`" + Center[0] + "," + Center[1]));
-        return SubCenters;
+        }
+        for(int i = 0; i< 4; i++)
+        {
+            RetCenters.Add(SubCenters[i]);
+        }
+        return RetCenters;
     }
 
     private void SetEdgesForCenter(int[] center, int sidePow)
@@ -100,19 +94,23 @@ public class TerMat
         {
             x = center[0] + (Convert.ToInt32(Mathf.Sin(Mathf.PI * i / 2)) * chunkLen);
             y = center[1] + (Convert.ToInt32(Mathf.Cos(Mathf.PI * i / 2)) * chunkLen);
+            Debug.Log(x + ", " + y);
             altitudeMap[x, y] = EdgeSum(x, y, chunkLen);
+            Debug.Log("====================");
         }
     }
 
     private double EdgeSum(int x, int y, int chunkLen)
     {
         double total = 0;
-        if (x + chunkLen <= sideLenIndex){total += altitudeMap[x + chunkLen, y]; }
-        if (y + chunkLen <= sideLenIndex){total += altitudeMap[x, y + chunkLen];}
-        if (x - chunkLen >= 0){total += altitudeMap[x - chunkLen, y];}
-        if (y - chunkLen >= 0){total += altitudeMap[x, y - chunkLen];}
+        int count = 0;
+        if (x + chunkLen <= sideLenIndex){total += altitudeMap[x + chunkLen, y]; count++; }
+        if (y + chunkLen <= sideLenIndex){total += altitudeMap[x, y + chunkLen]; count++; }
+        if (x - chunkLen >= 0){total += altitudeMap[x - chunkLen, y]; count++; }
+        if (y - chunkLen >= 0){total += altitudeMap[x, y - chunkLen]; count++; }
 
-        total = total / 4;
+        total = total / count;
+        Debug.Log(total + ", " + count);
         return total;
     }
 
@@ -120,7 +118,7 @@ public class TerMat
     {
         double noise;
         int chunkLen = Convert.ToInt32(Mathf.Pow(2, sideLenPow));
-        noise = Math.Floor((rand.NextDouble() - 0.5) * chunkLen * 2); //Smaller grid generate less noise, which means the grid wont experience massive spikes at random.
+        noise = Math.Floor((rand.NextDouble()) * chunkLen * 2); //Smaller grid generate less noise, which means the grid wont experience massive spikes at random.
         altitudeMap[Center[0], Center[1]] = AveragePointsCenter(chunkLen, Center) + noise;
     }
 
@@ -128,10 +126,18 @@ public class TerMat
     {
         double total = 0;
         int halfLen = Len / 2;
-        total += altitudeMap[PointMinusLen(centerIndex, 0, halfLen), PointMinusLen(centerIndex, 1, halfLen)];
-        total += altitudeMap[PointMinusLen(centerIndex, 0, halfLen), PointPlusLen(centerIndex, 1, halfLen)];
-        total += altitudeMap[PointPlusLen(centerIndex, 0, halfLen), PointMinusLen(centerIndex, 1, halfLen)];
-        total += altitudeMap[PointPlusLen(centerIndex, 0, halfLen), PointPlusLen(centerIndex, 1, halfLen)];
+        int xMod, yMod;
+        double k, j;
+        j = 0;
+
+        for (int i = 0; i < 4; i++)
+        {
+            k = j / 2;
+            xMod = (2 * (i % 2)) - 1;;
+            yMod = 2 * Convert.ToInt32(Math.Floor(k)) - 1;
+            total += altitudeMap[centerIndex[0] + xMod * halfLen, centerIndex[1] + yMod * halfLen];
+            j++;
+        }
         return total / 4;
     }
 
@@ -139,10 +145,10 @@ public class TerMat
     {
         int halfLen = sideLenIndex / 2;
         //Sets the Initial Corners
-        altitudeMap[PointMinusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * matSize * 1.5;
-        altitudeMap[PointMinusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * matSize * 1.5;
-        altitudeMap[PointPlusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * matSize * 1.5;
-        altitudeMap[PointPlusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * matSize * 1.5;
+        altitudeMap[PointMinusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
+        altitudeMap[PointMinusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
+        altitudeMap[PointPlusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
+        altitudeMap[PointPlusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
     }
 
     public TerMat(int[,] PreMadeMat)
