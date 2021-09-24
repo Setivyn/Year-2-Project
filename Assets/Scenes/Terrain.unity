@@ -153,6 +153,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   meshMat: {fileID: 2100000, guid: 724f67a022e5a814a9988880cbf8a874, type: 2}
+  Roughness: 0.9900000095367432
+  Steepness: 0.6399999856948853
+  sideLength: 7
 --- !u!4 &935443531
 Transform:
   m_ObjectHideFlags: 0

@@ -10,19 +10,27 @@ public class TerrainVisualiseLogic : MonoBehaviour
 {
     TerMat Matrix;
     [SerializeField] Material meshMat;
+    [SerializeField][Range(0.0f, 2f)] double Roughness;
+    [SerializeField][Range(0.0f, 2f)] double Steepness;
+    [SerializeField] int sideLength;
+    double[] modifiers;
 
     void Start()
     {
-        int lenPow = 5;
-        int lenFull = Convert.ToInt32(Math.Pow(2, lenPow) + 1);
+        int lenFull = Convert.ToInt32(Math.Pow(2, sideLength) + 1);
         int seed = Guid.NewGuid().GetHashCode();
 
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
         var MR = gameObject.AddComponent<MeshRenderer>();
         MR.sharedMaterial = meshMat;
+
+        //Set up Modifiers for Terrain
+        Debug.Log(Roughness);
+        modifiers = SetModifiers(Roughness, Steepness);
+
         //Generate Matrix and assign to mesh filter
-        Matrix = new TerMat(lenPow, seed);
+        Matrix = new TerMat(sideLength, seed, modifiers);
         MF.mesh = CreateMesh(Matrix, lenFull);
     }
 
@@ -30,6 +38,12 @@ public class TerrainVisualiseLogic : MonoBehaviour
     void Update()
     {
 
+    }
+
+    private double[] SetModifiers(double roughness, double steepness)
+    {
+        double[] output = { roughness, steepness };
+        return output;
     }
 
     Mesh CreateMesh(TerMat input, int sideLen)
@@ -47,7 +61,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         outMesh.triangles = SetTriangles(newVertices, sideLen);
 
         //Set Colours based on height [Temporary, for proof of concept.]
-        //outMesh.colors32 = SetColours(newVertices, maxY);
+        outMesh.colors32 = SetColours(newVertices, maxY);
 
         //Standard Recalculations
         outMesh.RecalculateNormals();
@@ -75,24 +89,24 @@ public class TerrainVisualiseLogic : MonoBehaviour
     Color32[] SetColours(Vector3[] newVertices, double max)
     {
         Color32[] outCol = new Color32[newVertices.Length];
-        double diff;
-        byte value;
+        byte[] rgb;
 
         for (int i = 0; i < newVertices.Length; i++)
         {
-            diff = Math.Abs(max - newVertices[i].y) / ((max + newVertices[i].y) / 2); //% difference between current value and maximum
-            if (diff > 1)
-            {
-                diff = 1;
-            }
-            value = Convert.ToByte(255 - Math.Floor(255 * diff));
+            rgb = SetConvertColours(newVertices, max);
 
             outCol[i].a = 255;
-            outCol[i].r = 255;
-            outCol[i].g = outCol[i].b = value;
+            outCol[i].r = rgb[0];
+            outCol[i].g = rgb[1];
+            outCol[i].b = rgb[2];
         }
 
         return outCol;
+    }
+
+    private byte[] SetConvertColours(Vector3[] newVertices, double max)
+    {
+        throw new NotImplementedException();
     }
 
     int[] SetTriangles(Vector3[] newVertices, int sideLen)

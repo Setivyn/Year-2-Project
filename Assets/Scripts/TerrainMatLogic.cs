@@ -11,8 +11,9 @@ public class TerMat
     protected int seed;
     protected System.Random rand;
     protected List<int[]> Centers; //List of Centers, reset for each layer
+    protected double noiseMod, heightMod; //Roughness, Steepness
 
-    public TerMat(int SidePow, int seed)
+    public TerMat(int SidePow, int seed, double[] modifiers)
     {
         Centers = new List<int[]>();
         rand = new System.Random(seed); //Generate a new set of random values, global to avoid repeats as using single seed for simulation
@@ -20,7 +21,8 @@ public class TerMat
         altitudeMap = new double[(sideLenIndex) + 1, (sideLenIndex) + 1];
         startCent = new int[2];
 
-
+        noiseMod = modifiers[0];
+        heightMod = modifiers[1];
 
         //Initialise first grid values, as these are set differently.
         startCent[0] = sideLenIndex / 2;
@@ -28,7 +30,6 @@ public class TerMat
         Centers.Add(startCent);
         SetCorners(Centers[0], sideLenIndex);
         altitudeMap[Centers[0][0], Centers[0][1]] = AveragePointsCenter(sideLenIndex, Centers[0]);
-        Debug.Log(altitudeMap[startCent[0], startCent[1]]);
         SetEdgesForCenter(Centers[0], SidePow - 1);
 
         DiamondSquare(SidePow - 1);
@@ -48,7 +49,7 @@ public class TerMat
 
         Centers.ForEach(delegate (int[] Center) //Sets values for all found centers, based on corners given
         {
-            SetCenter(sidePow - 1, Center);
+            SetCenter(sidePow, Center);
         });
 
         Centers.ForEach(delegate (int[] Center) //Find & Set edges corresponding to each center
@@ -94,9 +95,7 @@ public class TerMat
         {
             x = center[0] + (Convert.ToInt32(Mathf.Sin(Mathf.PI * i / 2)) * chunkLen);
             y = center[1] + (Convert.ToInt32(Mathf.Cos(Mathf.PI * i / 2)) * chunkLen);
-            Debug.Log(x + ", " + y);
             altitudeMap[x, y] = EdgeSum(x, y, chunkLen);
-            Debug.Log("====================");
         }
     }
 
@@ -110,7 +109,6 @@ public class TerMat
         if (y - chunkLen >= 0){total += altitudeMap[x, y - chunkLen]; count++; }
 
         total = total / count;
-        Debug.Log(total + ", " + count);
         return total;
     }
 
@@ -118,15 +116,15 @@ public class TerMat
     {
         double noise;
         int chunkLen = Convert.ToInt32(Mathf.Pow(2, sideLenPow));
-        noise = Math.Floor((rand.NextDouble()) * chunkLen * 2); //Smaller grid generate less noise, which means the grid wont experience massive spikes at random.
-        altitudeMap[Center[0], Center[1]] = AveragePointsCenter(chunkLen, Center) + noise;
+        noise = Math.Floor((rand.NextDouble() - 0.5) * chunkLen); //Smaller grid generate less noise, which means the grid wont experience massive spikes at random.
+        altitudeMap[Center[0], Center[1]] = AveragePointsCenter(chunkLen, Center) + (noise * noiseMod);
     }
 
     double AveragePointsCenter(int Len, int[] centerIndex)
     {
         double total = 0;
-        int halfLen = Len / 2;
         int xMod, yMod;
+        int halfLen = Len / 2;
         double k, j;
         j = 0;
 
@@ -145,10 +143,10 @@ public class TerMat
     {
         int halfLen = sideLenIndex / 2;
         //Sets the Initial Corners
-        altitudeMap[PointMinusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
-        altitudeMap[PointMinusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
-        altitudeMap[PointPlusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
-        altitudeMap[PointPlusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * 1.5;
+        altitudeMap[PointMinusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod;
+        altitudeMap[PointMinusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod;
+        altitudeMap[PointPlusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod;
+        altitudeMap[PointPlusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod;
     }
 
     public TerMat(int[,] PreMadeMat)
