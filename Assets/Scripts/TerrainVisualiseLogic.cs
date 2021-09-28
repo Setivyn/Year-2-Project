@@ -9,11 +9,12 @@ using UnityEditor;
 public class TerrainVisualiseLogic : MonoBehaviour
 {
     TerMat Matrix;
-    [SerializeField] Material meshMat;
+    [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
     [SerializeField][Range(0.0f, 2f)] double Steepness;
     [SerializeField] int sideLength;
     double[] modifiers;
+    Vector3[] vertices;
 
     void Start()
     {
@@ -23,7 +24,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
         var MR = gameObject.AddComponent<MeshRenderer>();
-        MR.sharedMaterial = meshMat;
+        MR.sharedMaterial = meshMater;
 
         //Set up Modifiers for Terrain
         Debug.Log(Roughness);
@@ -37,7 +38,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-
+        
     }
 
     private double[] SetModifiers(double roughness, double steepness)
@@ -49,19 +50,15 @@ public class TerrainVisualiseLogic : MonoBehaviour
     Mesh CreateMesh(TerMat input, int sideLen)
     {
         Mesh outMesh = new Mesh();
-        double maxY;
 
         //Assign New Vertices & Set mesh
         Vector3[] newVertices;
         newVertices = SetVertices(input, sideLen * sideLen, sideLen);
+        vertices = newVertices;
         outMesh.vertices = newVertices;
-        maxY = findMax(newVertices);
 
         //Find and Set triangles
         outMesh.triangles = SetTriangles(newVertices, sideLen);
-
-        //Set Colours based on height [Temporary, for proof of concept.]
-        outMesh.colors32 = SetColours(newVertices, maxY);
 
         //Standard Recalculations
         outMesh.RecalculateNormals();
@@ -84,29 +81,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
             }
         }
         return max;
-    }
-
-    Color32[] SetColours(Vector3[] newVertices, double max)
-    {
-        Color32[] outCol = new Color32[newVertices.Length];
-        byte[] rgb;
-
-        for (int i = 0; i < newVertices.Length; i++)
-        {
-            rgb = SetConvertColours(newVertices, max);
-
-            outCol[i].a = 255;
-            outCol[i].r = rgb[0];
-            outCol[i].g = rgb[1];
-            outCol[i].b = rgb[2];
-        }
-
-        return outCol;
-    }
-
-    private byte[] SetConvertColours(Vector3[] newVertices, double max)
-    {
-        throw new NotImplementedException();
     }
 
     int[] SetTriangles(Vector3[] newVertices, int sideLen)
@@ -152,6 +126,16 @@ public class TerrainVisualiseLogic : MonoBehaviour
         }
 
         return outVectors;
+    }
+
+    public void SetColours(double maxVal, double[] values)
+    {
+        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(maxVal, values, vertices);
+    }
+
+    Color32[] calcColours(double maxVal, double[] values, Vector3[] vertexList)
+    {
+        throw new NotImplementedException();
     }
 }
 
