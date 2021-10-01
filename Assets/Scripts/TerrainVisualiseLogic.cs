@@ -102,15 +102,20 @@ public class TerrainVisualiseLogic : MonoBehaviour
             }
         }
 
+        //IMPLEMENT: New Triangles, that connect the base vertices to the edges of the terra above them. 
+        //Map out which indices need to be with which. should be similar to above.
+        //TRIANGLES ASSIGN ANTICLOCKWISE FROM INSIDE e.g. for a triangle of vertices index 0,1,9, assign in that order
+        //use IF from vertices method
+
         return Triangles;
     }
 
     Vector3[] SetVertices(TerMat input, int sideLenTo2, int sideLen)
     {
         //Declare and initialise Vector array
-        Vector3[] outVectors = new Vector3[sideLenTo2];
+        Vector3[] outVectors = new Vector3[sideLenTo2 + 4 * (sideLen-1)]; //Vector Array for all points on matrix and the bottom edge pieces for completer mesh.
 
-        //Store each value in matrix to the lists
+        //Store each value in matrix to the array
         int pointer = 0;
         for (int i = 0; i < sideLen; i++)
         {
@@ -118,10 +123,28 @@ public class TerrainVisualiseLogic : MonoBehaviour
             {
                 Vector3 inputVector;
                 inputVector.x = i;
-                inputVector.y = Convert.ToInt32(input.GetMatrixAtPoint(i, j));
+                inputVector.y = (float)input.GetMatrixAtPoint(i, j);
                 inputVector.z = j;
                 outVectors[pointer] = inputVector;
                 pointer++;
+            }
+        }
+
+        //Store completer mesh edges, 
+        //CW MOVEMENT FROM 0,0
+        pointer = sideLenTo2;
+        for(int i = 0; i < sideLen; i++)
+        {
+            for (int j = 0; j < sideLen; j++) {
+                if ((i == 0 || j == 0) || i == sideLen - 1 || j == sideLen - 1) {
+                    Vector3 inputVector;
+                    Debug.Log(i + ", " + j);
+                    inputVector.x = i;
+                    inputVector.y = 0;
+                    inputVector.z = j;
+                    outVectors[pointer] = inputVector;
+                    pointer += 1;
+                }
             }
         }
 
@@ -130,10 +153,10 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     public void SetColours(double maxVal, double[] values)
     {
-        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(maxVal, values, vertices);
+        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(maxVal, values, vertices, sideLength);
     }
 
-    Color32[] calcColours(double maxVal, double[] values, Vector3[] vertexList)
+    Color32[] calcColours(double maxVal, double[] values, Vector3[] vertexList, int sidePower)
     {
         throw new NotImplementedException();
     }

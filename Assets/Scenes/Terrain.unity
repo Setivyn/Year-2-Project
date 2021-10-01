@@ -152,7 +152,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6d6e575041d765e4aa98aef775bc3db3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  meshMat: {fileID: 2100000, guid: 724f67a022e5a814a9988880cbf8a874, type: 2}
+  meshMater: {fileID: 2100000, guid: 724f67a022e5a814a9988880cbf8a874, type: 2}
   Roughness: 0.7099999785423279
   Steepness: 0.5099999904632568
   sideLength: 7
