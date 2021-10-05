@@ -113,7 +113,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
     Vector3[] SetVertices(TerMat input, int sideLenTo2, int sideLen)
     {
         //Declare and initialise Vector array
-        Vector3[] outVectors = new Vector3[sideLenTo2 + 4 * (sideLen-1)]; //Vector Array for all points on matrix and the bottom edge pieces for completer mesh.
+        Vector3[] outVectors = new Vector3[sideLenTo2 + 4 * (sideLen)]; //Vector Array for all points on matrix and the bottom edge pieces for completer mesh.
+        Vector3 inputVector;
 
         //Store each value in matrix to the array
         int pointer = 0;
@@ -121,7 +122,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         {
             for (int j = 0; j < sideLen; j++)
             {
-                Vector3 inputVector;
                 inputVector.x = i;
                 inputVector.y = (float)input.GetMatrixAtPoint(i, j);
                 inputVector.z = j;
@@ -135,17 +135,37 @@ public class TerrainVisualiseLogic : MonoBehaviour
         pointer = sideLenTo2;
         for(int i = 0; i < sideLen; i++)
         {
-            for (int j = 0; j < sideLen; j++) {
-                if ((i == 0 || j == 0) || i == sideLen - 1 || j == sideLen - 1) {
-                    Vector3 inputVector;
-                    Debug.Log(i + ", " + j);
-                    inputVector.x = i;
-                    inputVector.y = 0;
-                    inputVector.z = j;
-                    outVectors[pointer] = inputVector;
-                    pointer += 1;
-                }
-            }
+            inputVector.x = i;
+            inputVector.y = inputVector.z = 0;
+            outVectors[pointer] = inputVector;
+            pointer += 1;
+        }
+
+        for (int i = 0; i < sideLen; i++)
+        {
+            inputVector.x = sideLen - 1;
+            inputVector.y = 0;
+            inputVector.z = i;
+            outVectors[pointer] = inputVector;
+            pointer += 1;
+        }
+
+        for (int i = 0; i < sideLen; i++)
+        {
+            inputVector.x = i;
+            inputVector.y = 0;
+            inputVector.z = sideLen - 1;
+            outVectors[pointer] = inputVector;
+            pointer += 1;
+        }
+
+        for (int i = 0; i < sideLen; i++)
+        {
+            inputVector.x = 0;
+            inputVector.y = 0;
+            inputVector.z = i;
+            outVectors[pointer] = inputVector;
+            pointer += 1;
         }
 
         return outVectors;
