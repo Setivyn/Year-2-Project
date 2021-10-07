@@ -86,13 +86,14 @@ public class TerrainVisualiseLogic : MonoBehaviour
     int[] SetTriangles(Vector3[] newVertices, int sideLen)
 
     {
+        int x = sideLen - 1;
         int pointer = 0;
-        int[] Triangles = new int[6 * (sideLen - 1) * (sideLen - 1)]; // (sideLen - 1) ^ 2 is number of quads, each quad has 2 triangles with 3 vertices, hence the *6
-
-        //Set numbers for each quad (2 triangles)
-        for (int i = 0; i < sideLen - 1; i++)
+        int[] Triangles = new int[(6 * x * x) + (4 * 6 * x) + 6]; // (sideLen - 1) ^ 2 is number of quads, each quad has 2 triangles with 3 vertices, hence the *6
+        int sideLenTo2 = sideLen * sideLen;
+        //Top
+        for (int i = 0; i < x; i++)
         {
-            for (int j = 0; j < sideLen - 1; j++)
+            for (int j = 0; j < x; j++)
             {
                 Triangles[pointer + 0] = (sideLen * i) + j;
                 Triangles[pointer + 1] = Triangles[pointer + 3] = (sideLen * i) + j + 1;
@@ -101,6 +102,46 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 pointer += 6;
             }
         }
+
+        //X = 0
+        for (int i = 0; i < x; i++)
+        {
+            Triangles[pointer] = i;
+            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + i;
+            Triangles[pointer + 2] = Triangles[pointer + 3] = i + 1;
+            Triangles[pointer + 5] = sideLenTo2 + i + 1;
+            pointer += 6;
+        }
+
+        //Z = max
+        for (int i = 0; i < x; i++)
+        {
+            Triangles[pointer] = (x * (i + 1)) + i;
+            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + sideLen + i;
+            Triangles[pointer + 2] = Triangles[pointer + 3] = (x * (i + 2)) + i + 1;
+            Triangles[pointer + 5] = sideLenTo2 + sideLen + i + 1;
+            pointer += 6;
+        }
+
+        //X = max
+        for (int i = 0; i < x; i++)
+        {
+            Triangles[pointer] = sideLenTo2 - (i + 1);
+            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + (3 * sideLen) + 1 - i;
+            Triangles[pointer + 2] = Triangles[pointer + 3] = sideLenTo2 - (i + 1) - 1;
+            Triangles[pointer + 5] = sideLenTo2 + (3 * sideLen) - i;
+            pointer += 6;
+        }
+
+        //X = 0
+        /*for (int i = 0; i < x; i++)
+        {
+            Triangles[pointer] = i;
+            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + i;
+            Triangles[pointer + 2] = Triangles[pointer + 3] = i + 1;
+            Triangles[pointer + 5] = sideLenTo2 + i + 1;
+            pointer += 6;
+        }*/
 
         //IMPLEMENT: New Triangles, that connect the base vertices to the edges of the terra above them. 
         //Map out which indices need to be with which. should be similar to above.
@@ -135,17 +176,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
         pointer = sideLenTo2;
         for(int i = 0; i < sideLen; i++)
         {
-            inputVector.x = i;
-            inputVector.y = inputVector.z = 0;
-            outVectors[pointer] = inputVector;
-            pointer += 1;
-        }
-
-        for (int i = 0; i < sideLen; i++)
-        {
-            inputVector.x = sideLen - 1;
-            inputVector.y = 0;
             inputVector.z = i;
+            inputVector.y = inputVector.x = 0;
             outVectors[pointer] = inputVector;
             pointer += 1;
         }
@@ -155,6 +187,16 @@ public class TerrainVisualiseLogic : MonoBehaviour
             inputVector.x = i;
             inputVector.y = 0;
             inputVector.z = sideLen - 1;
+            outVectors[pointer] = inputVector;
+            pointer += 1;
+            
+        }
+
+        for (int i = 0; i < sideLen; i++)
+        {
+            inputVector.z = i;
+            inputVector.y = 0;
+            inputVector.x = sideLen - 1;
             outVectors[pointer] = inputVector;
             pointer += 1;
         }
