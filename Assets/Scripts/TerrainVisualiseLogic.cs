@@ -27,7 +27,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         MR.sharedMaterial = meshMater;
 
         //Set up Modifiers for Terrain
-        Debug.Log(Roughness);
         modifiers = SetModifiers(Roughness, Steepness);
 
         //Generate Matrix and assign to mesh filter
@@ -127,26 +126,28 @@ public class TerrainVisualiseLogic : MonoBehaviour
         for (int i = 0; i < x; i++)
         {
             Triangles[pointer] = sideLenTo2 - (i + 1);
-            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + (3 * sideLen) + 1 - i;
-            Triangles[pointer + 2] = Triangles[pointer + 3] = sideLenTo2 - (i + 1) - 1;
-            Triangles[pointer + 5] = sideLenTo2 + (3 * sideLen) - i;
+            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + (3 * sideLen) - (i + 1);
+            Triangles[pointer + 2] = Triangles[pointer + 3] =  sideLenTo2 - (i + 1) - 1;
+            Triangles[pointer + 5] = sideLenTo2 + (3* sideLen) - (i + 2); 
             pointer += 6;
+            
         }
 
         //X = 0
-        /*for (int i = 0; i < x; i++)
+        for (int i = 0; i < x; i++)
         {
-            Triangles[pointer] = i;
-            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + i;
-            Triangles[pointer + 2] = Triangles[pointer + 3] = i + 1;
-            Triangles[pointer + 5] = sideLenTo2 + i + 1;
+            Triangles[pointer] = sideLenTo2 - sideLen - (i * sideLen);
+            Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + (4 * sideLen) - (i + 1);
+            Triangles[pointer + 2] = Triangles[pointer + 3] = sideLenTo2 - (2 * sideLen) - (i * sideLen);
+            Triangles[pointer + 5] = sideLenTo2 + (4 * sideLen) - (i + 2);
             pointer += 6;
-        }*/
-
-        //IMPLEMENT: New Triangles, that connect the base vertices to the edges of the terra above them. 
-        //Map out which indices need to be with which. should be similar to above.
-        //TRIANGLES ASSIGN ANTICLOCKWISE FROM INSIDE e.g. for a triangle of vertices index 0,1,9, assign in that order
-        //use IF from vertices method
+        }
+         
+        //BasePlate
+        Triangles[pointer] = sideLenTo2;
+        Triangles[pointer + 1] = Triangles[pointer + 4] = sideLenTo2 + (4 * sideLen) - 1;
+        Triangles[pointer + 2] = Triangles[pointer + 3] = sideLenTo2 + sideLen - 1;
+        Triangles[pointer + 5] = sideLenTo2 + (3 * sideLen) -1;
 
         return Triangles;
     }
@@ -198,14 +199,15 @@ public class TerrainVisualiseLogic : MonoBehaviour
             inputVector.y = 0;
             inputVector.x = sideLen - 1;
             outVectors[pointer] = inputVector;
+            Debug.Log(pointer);
             pointer += 1;
         }
 
         for (int i = 0; i < sideLen; i++)
         {
-            inputVector.x = 0;
+            inputVector.z = 0;
             inputVector.y = 0;
-            inputVector.z = i;
+            inputVector.x = i;
             outVectors[pointer] = inputVector;
             pointer += 1;
         }
