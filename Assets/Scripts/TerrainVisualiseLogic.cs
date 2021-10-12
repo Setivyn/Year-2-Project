@@ -12,7 +12,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
     [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
     [SerializeField][Range(0.0f, 2f)] double Steepness;
-    [SerializeField] int sideLength;
+    [SerializeField][Range(0,10)] int sideLength;
     double[] modifiers;
     Vector3[] vertices;
 
@@ -213,6 +213,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
         }
 
         return outVectors;
+    }
+
+    public int getSL()
+    {
+        return sideLength;
     }
 
     public void SetColours(double maxVal, double[] values)
