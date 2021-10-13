@@ -9,10 +9,12 @@ struct GridCube //whole grid structure, each index is smaller cubes of size (int
     public float dt { get; set; }
     public float diff { get; set; }
     public float visc { get; set; }
+    public int count { get; set; }
 
-    public float[,,] density { get; set; } //Density, Velocity, Prev. Velocity Arrays 
+    public float[,,] density { get; set; }  //Density, Prev Density
+    public float[,,] d0 { get; set; }
 
-    public float[,,] Vx { get; set; }
+    public float[,,] Vx { get; set; } //V, Prev V
     public float[,,] Vy { get; set; }
     public float[,,] Vz { get; set; }
 
@@ -53,7 +55,9 @@ public class FluidLogic : MonoBehaviour
         newCube.dt = dt;
         newCube.diff = diffusion;
         newCube.visc = viscosity;
+        newCube.count = N;
 
+        newCube.d0 = new float[N, N, N];
         newCube.density = new float[N, N, N];
 
         newCube.Vx = new float[N, N, N];
@@ -67,39 +71,44 @@ public class FluidLogic : MonoBehaviour
         return newCube;
     }
 
-    void EnactTimeStep(GridCube cube)
+    void EnactTimeStep(GridCube cube, int iterations)
     {
         //{
-        diffuse(1, cube.Vx0, cube.Vx, cube.visc, cube.dt, 4, cube.size);
-        diffuse(2, cube.Vy0, cube.Vy, cube.visc, cube.dt, 4, cube.size);
-        diffuse(3, cube.Vz0, cube.Vz, cube.visc, cube.dt, 4, cube.size);
+        diffuse(1, cube.Vx0, cube.Vx, cube.visc, cube.dt, iterations, cube.size);
+        diffuse(2, cube.Vy0, cube.Vy, cube.visc, cube.dt, iterations, cube.size);
+        diffuse(3, cube.Vz0, cube.Vz, cube.visc, cube.dt, iterations, cube.size);
 
-        project();
+        project(cube.Vx0, cube.Vy0, cube.Vz0, cube.Vx, cube.Vy, iterations, cube.count);
 
-        advect();
-        advect();
-        advect();
+        advect(1, cube.Vx, cube.Vx0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
+        advect(1, cube.Vy, cube.Vy0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
+        advect(1, cube.Vz, cube.Vz0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
 
-        project();
+        project(cube.Vx, cube.Vy, cube.Vz, cube.Vx0, cube.Vy0, iterations, cube.count);
         //} Move Velocities
 
         //{
-        diffuse();
-        advect();
+        diffuse(0, cube.d0, cube.density, cube.visc, cube.dt, iterations, cube.size);
+        advect(1, cube.density, cube.d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
         //} Move Dye
     }
 
-    void diffuse(int d, float[,,] Vx0, float[,,] Vx, float visc, float dt, int iter, int size)
+    void diffuse(int d, float[,,] Vq0, float[,,] Vq, float visc, float dt, int iter, int size)
     {
 
     }
 
-    void project()
+    void project(float[,,] Vx0, float[,,] Vy0, float[,,] Vz0, float[,,] p, float[,,] div, int iter, int N)
     {
 
     }
 
-    void advect()
+    void advect(int d, float[,,] Vq, float[,,] Vq0, float[,,] Vx, float[,,] Vy, float[,,] Vz, float dt, int N)
+    {
+
+    }
+
+    void linearSolve(int b, float[,,] q, float[,,] q0, )
     {
 
     }
