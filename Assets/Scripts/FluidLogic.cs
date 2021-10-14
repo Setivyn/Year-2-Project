@@ -41,14 +41,17 @@ public class FluidLogic : MonoBehaviour
 
     }
 
-    void BeginSimulation()
+    void BeginSimulation(int iterations, int divSize, float diff, float visc, float dt)
     {
+        cubes = DefineCube(divSize, diff, visc, dt, meshSize);
 
+        EnactTimeStep(cubes, iterations);
     }
+
+    
 
     GridCube DefineCube(int size, float diffusion, float viscosity, float dt, int meshSize)
     {
-        //Implement 
         int N = (meshSize - 1) / size;
         GridCube newCube = new GridCube();
         newCube.size = size;
@@ -74,15 +77,15 @@ public class FluidLogic : MonoBehaviour
     void EnactTimeStep(GridCube cube, int iterations)
     {
         //{
-        diffuse(1, cube.Vx0, cube.Vx, cube.visc, cube.dt, iterations, cube.size);
-        diffuse(2, cube.Vy0, cube.Vy, cube.visc, cube.dt, iterations, cube.size);
-        diffuse(3, cube.Vz0, cube.Vz, cube.visc, cube.dt, iterations, cube.size);
+        diffuse(1, cube.Vx0, cube.Vx, cube.diff, cube.dt, iterations, cube.size);
+        diffuse(2, cube.Vy0, cube.Vy, cube.diff, cube.dt, iterations, cube.size);
+        diffuse(3, cube.Vz0, cube.Vz, cube.diff, cube.dt, iterations, cube.size);
 
         project(cube.Vx0, cube.Vy0, cube.Vz0, cube.Vx, cube.Vy, iterations, cube.count);
 
         advect(1, cube.Vx, cube.Vx0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        advect(1, cube.Vy, cube.Vy0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        advect(1, cube.Vz, cube.Vz0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
+        advect(2, cube.Vy, cube.Vy0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
+        advect(3, cube.Vz, cube.Vz0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
 
         project(cube.Vx, cube.Vy, cube.Vz, cube.Vx0, cube.Vy0, iterations, cube.count);
         //} Move Velocities
@@ -93,9 +96,10 @@ public class FluidLogic : MonoBehaviour
         //} Move Dye
     }
 
-    void diffuse(int d, float[,,] Vq0, float[,,] Vq, float visc, float dt, int iter, int size)
+    void diffuse(int d, float[,,] Vq0, float[,,] Vq, float diff, float dt, int iter, int size)
     {
-
+        float a = dt * diff * (size - 2) * (size * 2);
+        linearSolve(d, Vq, Vq0, a, 1 + (6 * a), iter, size); 
     }
 
     void project(float[,,] Vx0, float[,,] Vy0, float[,,] Vz0, float[,,] p, float[,,] div, int iter, int N)
@@ -108,7 +112,12 @@ public class FluidLogic : MonoBehaviour
 
     }
 
-    void linearSolve(int b, float[,,] q, float[,,] q0, )
+    void linearSolve(int b, float[,,] q, float[,,] q0, float a, float c, int iterations, int size)
+    {
+
+    }
+
+    void resetBounds(float b, int[,,] q, int count)
     {
 
     }

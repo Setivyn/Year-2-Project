@@ -222,12 +222,29 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     public void SetColours(double maxVal, double[] values)
     {
-        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(maxVal, values, vertices, sideLength);
+        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(maxVal, values);
     }
 
-    Color32[] calcColours(double maxVal, double[] values, Vector3[] vertexList, int sidePower)
+    Color32[] calcColours(double maxVal, double[] values)
     {
-        throw new NotImplementedException();
+        Color32[] newCols = new Color32[values.Length];
+        int pointer = 0;
+
+        foreach(double v in values)
+        {
+            newCols[pointer] = UnityEngine.Color.HSVToRGB(1 - findDiff(maxVal, v), 0.5, 1);
+            pointer += 1;
+        }
+
+
+        return newCols;
+    }
+
+    private float findDiff(double maxVal, double current)
+    {
+        float output = Convert.ToSingle((maxVal - current) / ((maxVal + current) / 2));
+        output = Mathf.Clamp(output, 0.15f, 1);
+        return output;
     }
 }
 
