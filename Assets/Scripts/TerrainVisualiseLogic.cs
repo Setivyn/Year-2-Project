@@ -232,7 +232,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         foreach(double v in values)
         {
-            newCols[pointer] = UnityEngine.Color.HSVToRGB(1 - findDiff(maxVal, v), 0.5, 1);
+            newCols[pointer] = UnityEngine.Color.HSVToRGB(1 - findDiff(maxVal, v), 0.5f, 1);
             pointer += 1;
         }
 

@@ -77,47 +77,90 @@ public class FluidLogic : MonoBehaviour
     void EnactTimeStep(GridCube cube, int iterations)
     {
         //{
-        diffuse(1, cube.Vx0, cube.Vx, cube.diff, cube.dt, iterations, cube.size);
-        diffuse(2, cube.Vy0, cube.Vy, cube.diff, cube.dt, iterations, cube.size);
-        diffuse(3, cube.Vz0, cube.Vz, cube.diff, cube.dt, iterations, cube.size);
+        float[,,] Vx = cube.Vx;
+        float[,,] Vy = cube.Vy;
+        float[,,] Vz = cube.Vz;
+        float[,,] Vx0 = cube.Vx0;
+        float[,,] Vy0 = cube.Vy0;
+        float[,,] Vz0 = cube.Vz0;
 
-        project(cube.Vx0, cube.Vy0, cube.Vz0, cube.Vx, cube.Vy, iterations, cube.count);
+        float[,,] dens = cube.density;
+        float[,,] d0 = cube.d0;
 
-        advect(1, cube.Vx, cube.Vx0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        advect(2, cube.Vy, cube.Vy0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        advect(3, cube.Vz, cube.Vz0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-
-        project(cube.Vx, cube.Vy, cube.Vz, cube.Vx0, cube.Vy0, iterations, cube.count);
-        //} Move Velocities
+        //} Passer Values, allows transfer of struct properties without annoying compiler
 
         //{
-        diffuse(0, cube.d0, cube.density, cube.visc, cube.dt, iterations, cube.size);
-        advect(1, cube.density, cube.d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
+        diffuse(1, Vx0, ref Vx, cube.diff, cube.dt, iterations, cube.count);
+        diffuse(2, Vy0, ref Vy, cube.diff, cube.dt, iterations, cube.count);
+        diffuse(3, Vz0, ref Vz, cube.diff, cube.dt, iterations, cube.count);
+
+        project(ref Vx0, ref Vy0, ref Vz0, ref Vx, ref Vy, iterations, cube.count);
+
+        advect(1, ref Vx, Vx0, Vx, Vy, Vz, cube.dt, cube.count);
+        advect(2, ref Vy, Vy0, Vx, Vy, Vz, cube.dt, cube.count);
+        advect(3, ref Vz, Vz0, Vx, Vy, Vz, cube.dt, cube.count);
+
+        project(ref Vx, ref Vy, ref Vz, ref Vx0, ref Vy0, iterations, cube.count);
+        //} Move Velocities
+        //{
+        cube.Vx = Vx;
+        cube.Vy = Vy;
+        cube.Vz = Vz;
+        cube.Vx0 = Vx0;
+        cube.Vy0 = Vy0;
+        cube.Vz0 = Vz0;
+
+        cube.density = dens;
+        cube.d0 = d0;
+        //} Pass Back new Values
+        //{
+        diffuse(0, cube.d0, ref dens, cube.visc, cube.dt, iterations, cube.size);
+        advect(1, ref dens, cube.d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
         //} Move Dye
     }
 
-    void diffuse(int d, float[,,] Vq0, float[,,] Vq, float diff, float dt, int iter, int size)
+    void diffuse(int d, float[,,] Vq0, ref float[,,] Vq, float diff, float dt, int iter, int count)
     {
-        float a = dt * diff * (size - 2) * (size * 2);
-        linearSolve(d, Vq, Vq0, a, 1 + (6 * a), iter, size); 
+        float a = dt * diff * (count - 2) * (count * 2);
+        linearSolve(d, ref Vq, Vq0, a, 1 + (6 * a), iter, count); 
     }
 
-    void project(float[,,] Vx0, float[,,] Vy0, float[,,] Vz0, float[,,] p, float[,,] div, int iter, int N)
-    {
-
-    }
-
-    void advect(int d, float[,,] Vq, float[,,] Vq0, float[,,] Vx, float[,,] Vy, float[,,] Vz, float dt, int N)
+    void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
     {
 
     }
 
-    void linearSolve(int b, float[,,] q, float[,,] q0, float a, float c, int iterations, int size)
+    void advect(int d, ref float[,,] Vq, float[,,] Vq0, float[,,] Vx, float[,,] Vy, float[,,] Vz, float dt, int N)
     {
 
     }
 
-    void resetBounds(float b, int[,,] q, int count)
+    void linearSolve(int b, ref float[,,] q, float[,,] q0, float a, float c, int iterations, int count)
+    {
+        float cRecip = 1 / c;
+        for(int m = 0; m < iterations; m++)
+        {
+            for(int k = 0; k < count - 1; k++)
+            {
+                for(int j = 0; j < count - 1; j++)
+                {
+                    for(int i = 0; i < count - 1; i++)
+                    {
+                        q[i, j, k] = (q0[i, j, k]
+                            + a * (q[i+1, j, k] +
+                                   q[i-1, j, k] +
+                                   q[i, j+1, k] +
+                                   q[i, j-1, k] +
+                                   q[i, j, k+1] +
+                                   q[i, j, k-1] )) * cRecip;
+                    }
+                }
+            }
+            resetBounds(b, ref q, count);
+        }
+    }
+
+    void resetBounds(float b, ref float[,,] q, int count)
     {
 
     }
