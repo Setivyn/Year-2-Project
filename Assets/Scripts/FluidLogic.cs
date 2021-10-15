@@ -127,6 +127,17 @@ public class FluidLogic : MonoBehaviour
 
     void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
     {
+        //XYZ nested fors, manip div
+
+        resetBounds(0, ref div, N);
+        resetBounds(0, ref p, N);
+        linearSolve(0, ref p, div, 1, 6, iter, N);
+
+        //XYZ Nexted fors, manip vXYZ
+
+        resetBounds(1, ref Vx1, N);
+        resetBounds(2, ref Vy1, N);
+        resetBounds(3, ref Vz1, N);
 
     }
 

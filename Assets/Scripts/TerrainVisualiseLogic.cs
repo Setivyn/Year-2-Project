@@ -199,7 +199,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
             inputVector.y = 0;
             inputVector.x = sideLen - 1;
             outVectors[pointer] = inputVector;
-            Debug.Log(pointer);
             pointer += 1;
         }
 
