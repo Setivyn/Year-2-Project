@@ -119,10 +119,10 @@ public class FluidLogic : MonoBehaviour
         //} Move Dye
     }
 
-    void diffuse(int d, float[,,] Vq0, ref float[,,] Vq, float diff, float dt, int iter, int count)
+    void diffuse(int d, float[,,] Vq0, ref float[,,] Vq, float diff, float dt, int iter, int N)
     {
-        float a = dt * diff * (count - 2) * (count * 2);
-        linearSolve(d, ref Vq, Vq0, a, 1 + (6 * a), iter, count); 
+        float a = dt * diff * (N - 2) * (N * 2);
+        linearSolve(d, ref Vq, Vq0, a, 1 + (6 * a), iter, N); 
     }
 
     void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
@@ -175,19 +175,85 @@ public class FluidLogic : MonoBehaviour
 
     void advect(int d, ref float[,,] Vq, float[,,] Vq0, float[,,] Vx, float[,,] Vy, float[,,] Vz, float dt, int N)
     {
+        float i0, i1, j0, j1, k0, k1;
 
+        float dtx, dty, dtz;
+        dtx = dty = dtz = dt * (N - 2);
+
+        float s0, s1, t0, t1, u0, u1;
+        float tmp1, tmp2, tmp3, x, y, z;
+
+        int i, j, k;
+
+        for(k = 1; k < N -1; k++)
+        {
+            for (j = 1; j < N - 1; j++)
+            {
+                for (i = 1; i < N - 1; i++)
+                {
+                    tmp1 = dtx * Vx[i, j, k];
+                    tmp2 = dty * Vy[i, j, k];
+                    tmp3 = dtz * Vz[i, j, k];
+
+                    x = i - tmp1;
+                    y = j - tmp2;
+                    z = k - tmp3;
+
+                    if (x < 0.5f) { x = 0.5f; }
+                    if (x > N + 0.5f) { x = N + 0.5f; }
+                    i0 = Mathf.Floor(x);
+                    i1 = i0 + 1f;
+                    if (y < 0.5f) { y = 0.5f; }
+                    if (y > N + 0.5f) { y = N + 0.5f; }
+                    j0 = Mathf.Floor(y);
+                    j1 = j0 + 1f;
+                    if (z < 0.5f) { z = 0.5f; }
+                    if (z > N + 0.5f) { z = N + 0.5f; }
+                    k0 = Mathf.Floor(z);
+                    k1 = k0 + 1f;
+
+                    s1 = x - i0;
+                    s0 = 1f - s1;
+                    t1 = x - j0;
+                    t0 = 1f - t1;
+                    u1 = x - i0;
+                    u0 = 1f - u1;
+
+                    int i0I = (int)i0;
+                    int i1I = (int)i1;
+                    int j0I = (int)j0;
+                    int j1I = (int)j1;
+                    int k0I = (int)k0;
+                    int k1I = (int)k1;
+
+                    Vq[i, j, k] = (
+                        s0 * (t0 * (u0 * Vq0[i0I, j0I, k0I]
+                                   +u1 * Vq0[i0I, j0I, k1I])
+                             +(t1 * (u0 * Vq0[i0I, j1I, k0I]
+                                   + u1 * Vq0[i0I, j1I, k1I])))
+                       +s1 * (t0 * (u0 * Vq0[i1I, j0I, k0I]
+                                   + u1 * Vq0[i1I, j0I, k1I])
+                             + (t1 * (u0 * Vq0[i1I, j1I, k0I]
+                                   + u1 * Vq0[i1I, j1I, k1I])))
+                        );
+                }
+            }
+        }
+
+
+        resetBounds(d, ref Vq, N);
     }
 
-    void linearSolve(int b, ref float[,,] q, float[,,] q0, float a, float c, int iterations, int count)
+    void linearSolve(int b, ref float[,,] q, float[,,] q0, float a, float c, int iterations, int N)
     {
         float cRecip = 1 / c;
         for(int m = 0; m < iterations; m++)
         {
-            for(int k = 0; k < count - 1; k++)
+            for(int k = 0; k < N - 1; k++)
             {
-                for(int j = 0; j < count - 1; j++)
+                for(int j = 0; j < N - 1; j++)
                 {
-                    for(int i = 0; i < count - 1; i++)
+                    for(int i = 0; i < N - 1; i++)
                     {
                         q[i, j, k] = (q0[i, j, k]
                             + a * (q[i+1, j, k] +
@@ -199,13 +265,63 @@ public class FluidLogic : MonoBehaviour
                     }
                 }
             }
-            resetBounds(b, ref q, count);
+            resetBounds(b, ref q, N);
         }
     }
 
-    void resetBounds(float b, ref float[,,] q, int count)
+    void resetBounds(float b, ref float[,,] q, int N)
     {
+        for(int j = 1; j < N-1; j ++)
+        {
+            for(int i = 1; i < N - 1; i++)
+            {
+                q[i, j, 0    ] = b == 3 ? -q[i, j, 1    ] : q[i, j, 1    ];
+                q[i, j, N - 1] = b == 3 ? -q[i, j, N - 2] : q[i, j, N - 2];
+            }
+        }
 
+        for (int k = 1; k < N - 1; k++)
+        {
+            for (int i = 1; i < N - 1; i++)
+            {
+                q[i, 0, k    ] = b == 2 ? -q[i, 1, k    ] : q[i, 1, k    ];
+                q[i, N - 1, k] = b == 2 ? -q[i, N - 2, k] : q[i, N - 2, k];
+            }
+        }
+
+        for (int k = 1; k < N - 1; k++)
+        {
+            for (int j = 1; j < N - 1; j++)
+            {
+                q[0, j, k    ] = b == 1 ? -q[1, j, k    ] : q[1, j, k    ];
+                q[N - 1, j, k] = b == 1 ? -q[N - 2, j, k] : q[N - 2, j, k];
+            }
+        }
+
+        q[0, 0, 0]             = 0.33f * (q[1, 0, 0]
+                                        + q[0, 1, 0]
+                                        + q[0, 0, 1]);
+        q[0, N - 1, 0]         = 0.33f * (q[1, N - 1, 0]
+                                        + q[0, N - 2, 0]
+                                        + q[0, N - 1, 1]);
+        q[0, 0, N - 1]         = 0.33f * (q[1, 0, N - 1]
+                                        + q[0, 1, N - 1]
+                                        + q[0, 0, N - 2]);
+        q[0, N - 1, N - 1]     = 0.33f * (q[1, N - 1, N - 1]
+                                        + q[0, N - 2, N - 1]
+                                        + q[0, N - 2, N - 2]);
+        q[N - 1, 0, 0]         = 0.33f * (q[N - 2, 0, 0]
+                                        + q[N - 1, 1, 0]
+                                        + q[N - 1, 0, 1]);
+        q[N - 1, N - 1, 0]     = 0.33f * (q[N - 2, N - 1, 0]
+                                        + q[N - 1, N - 2, 0]
+                                        + q[N - 1, N - 1, 1]);
+        q[N - 1, 0, N - 1]     = 0.33f * (q[N - 2, N - 1, 0]
+                                        + q[N - 1, N - 2, 0]
+                                        + q[N - 1, N - 1, 1]);
+        q[N - 1, N - 1, N - 1] = 0.33f * (q[N - 2, N - 1, N - 1]
+                                        + q[N - 1, N - 2, N - 1]
+                                        + q[N - 1, N - 1, N - 2]);
     }
 
     void addDToCube(ref GridCube cubes, int x, int y, int z, float amount)
