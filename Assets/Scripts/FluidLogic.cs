@@ -127,13 +127,45 @@ public class FluidLogic : MonoBehaviour
 
     void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
     {
-        //XYZ nested fors, manip div
+        for (int k = 0; k < N - 1; k++)
+        {
+            for (int j = 0; j < N - 1; j++)
+            {
+                for (int i = 0; i < N - 1; i++)
+                {
+                    div[i, j, k] = -0.5f * (
+                         Vx1[i + 1, j, k]
+                        -Vx1[i - 1, j, k]
+                        +Vy1[i, j + 1, k]
+                        -Vy1[i, j - 1, k]
+                        +Vz1[i, j, k + 1]
+                        -Vz1[i, j, k - 1])/ N;
+                    p[i, j, k] = 0;
+                }
+            }
+
+        }
 
         resetBounds(0, ref div, N);
         resetBounds(0, ref p, N);
         linearSolve(0, ref p, div, 1, 6, iter, N);
 
-        //XYZ Nexted fors, manip vXYZ
+        for (int k = 0; k < N - 1; k++)
+        {
+            for (int j = 0; j < N - 1; j++)
+            {
+                for (int i = 0; i < N - 1; i++)
+                {
+                    Vx1[i, j, k] -= 0.5f * (p[i + 1, j, k]
+                                           +p[i - 1, j, k]) * N;
+                    Vy1[i, j, k] -= 0.5f * (p[i, j + 1, k]
+                                           +p[i, j - 1, k]) * N;
+                    Vz1[i, j, k] -= 0.5f * (p[i, j, k + 1]
+                                           +p[i, j, k - 1]) * N;
+                }
+            }
+
+        }
 
         resetBounds(1, ref Vx1, N);
         resetBounds(2, ref Vy1, N);
@@ -188,12 +220,15 @@ public class FluidLogic : MonoBehaviour
         cubes.Vz[x, y, z] = Vz1;
     }
 
-    void SetColour(double maxVal, double[] values)
+    public int getCubeCount()
     {
-        meshObject.GetComponent<TerrainVisualiseLogic>().SetColours(maxVal, values);
+        return cubes.count;
     }
 
-    
+    public float getDensityAtCube(int x, int y, int z)
+    {
+        return cubes.density[x, y, z];
+    }
 
 }
 

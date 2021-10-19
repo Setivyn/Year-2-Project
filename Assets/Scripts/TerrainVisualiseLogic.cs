@@ -9,6 +9,7 @@ using UnityEditor;
 public class TerrainVisualiseLogic : MonoBehaviour
 {
     TerMat Matrix;
+    [SerializeField] FluidLogic CFDLogic;
     [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
     [SerializeField][Range(0.0f, 2f)] double Steepness;
@@ -244,6 +245,27 @@ public class TerrainVisualiseLogic : MonoBehaviour
         float output = Convert.ToSingle((maxVal - current) / ((maxVal + current) / 2));
         output = Mathf.Clamp(output, 0.15f, 1);
         return output;
+    }
+
+    float[,,] recieveD()
+    {
+        int cubeN = CFDLogic.getCubeCount();
+
+        float[,,] densOut = new float[cubeN, cubeN, cubeN];
+
+
+        for (int k = 0; k < cubeN; k++)
+        {
+            for (int j = 0; j < cubeN; j++)
+            {
+                for (int i = 0; i < cubeN; i++)
+                {
+                    densOut[i, j, k] = CFDLogic.getDensityAtCube(i, j, k);
+                }
+            }
+        }
+
+        return densOut;
     }
 }
 
