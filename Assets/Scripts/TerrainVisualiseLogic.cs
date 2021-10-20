@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Diagnostics.Tracing;
 using System.Drawing;
 using UnityEditor;
+using System.Linq;
 
 public class TerrainVisualiseLogic : MonoBehaviour
 {
@@ -13,12 +14,16 @@ public class TerrainVisualiseLogic : MonoBehaviour
     [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
     [SerializeField][Range(0.0f, 2f)] double Steepness;
-    [SerializeField][Range(0,10)] int sideLength;
+    [SerializeField][Range(1,4)] int inputLen;
+    int sideLength;
     double[] modifiers;
     Vector3[] vertices;
 
     void Start()
     {
+        int sideLengthT = (inputLen * 2) + 3; 
+        //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
+        sideLength = sideLengthT;
         int lenFull = Convert.ToInt32(Math.Pow(2, sideLength) + 1);
         int seed = Guid.NewGuid().GetHashCode();
 
@@ -33,6 +38,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
         //Generate Matrix and assign to mesh filter
         Matrix = new TerMat(sideLength, seed, modifiers);
         MF.mesh = CreateMesh(Matrix, lenFull);
+
+        initSimulation();
     }
 
     // Update is called once per frame
@@ -218,6 +225,40 @@ public class TerrainVisualiseLogic : MonoBehaviour
     public int getSL()
     {
         return sideLength;
+    }
+
+    //FLUID INTERFACE
+
+    void initSimulation()
+    {
+        CFDLogic.initSimulation();
+    }
+
+    void beginSim(int iterations)
+    {
+        CFDLogic.startStop();
+        CFDLogic.simulateLoop(iterations);
+    }
+
+    public double[] findValues(ref double maxVal, TerMat matrix)
+    {
+        int cubeN = CFDLogic.getCubeCount();
+        int cubeN2 = cubeN ^ 2;
+        float[,,] densities = recieveD();
+        int matY;
+
+        double[] output = new double[cubeN2];
+        for (int i = 0; i < sideLength; i++)
+        {
+            for(int j = 0; j < sideLength; j++)
+            {
+                matY = (int)Math.Floor(matrix.GetMatrixAtPoint(i, j));
+                output[(i * sideLength) + j] = densities[i, matY, j];
+            }
+        }
+        maxVal = output.Max();
+
+        return output;
     }
 
     public void SetColours(double maxVal, double[] values)

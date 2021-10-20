@@ -26,8 +26,15 @@ struct GridCube //whole grid structure, each index is smaller cubes of size (int
 public class FluidLogic : MonoBehaviour
 {
     [SerializeField] TerrainVisualiseLogic meshObject;
+    [SerializeField] [Range(1,5)]int divSizeI = 3;
+    [SerializeField] [Range(0f, 1f)] float diffI;
+    [SerializeField] [Range(0f, 1f)] float viscI;
+    [SerializeField] [Range(1f, 100f)] float dtI;
+
     GridCube cubes;
     int meshSize;
+
+    bool runSimulation;
 
     // Start is called before the first frame update
     void Start()
@@ -41,18 +48,29 @@ public class FluidLogic : MonoBehaviour
 
     }
 
-    void BeginSimulation(int iterations, int divSize, float diff, float visc, float dt)
+    public void startStop()
     {
-        cubes = DefineCube(divSize, diff, visc, dt, meshSize);
-
-        EnactTimeStep(cubes, iterations);
+        if (runSimulation) { runSimulation = false; }
+        else { runSimulation = true; }
+            
     }
 
-    
+    public void initSimulation()
+    {
+        cubes = DefineCube(divSizeI, diffI, viscI, dtI, meshSize);
+    }
+
+    public void simulateLoop(int iterations)
+    {
+        while (runSimulation){
+            EnactTimeStep(cubes, iterations);
+            System.Threading.Thread.Sleep((int)Math.Floor(cubes.dt) + 1);
+        }
+    }
 
     GridCube DefineCube(int size, float diffusion, float viscosity, float dt, int meshSize)
     {
-        int N = (meshSize - 1) / size;
+        int N = meshSize / size;
         GridCube newCube = new GridCube();
         newCube.size = size;
         newCube.dt = dt;
