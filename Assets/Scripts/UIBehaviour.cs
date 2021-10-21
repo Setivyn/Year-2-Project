@@ -7,13 +7,14 @@ public class UIBehaviour : MonoBehaviour
 {
     [SerializeField] TerrainVisualiseLogic VisLogic;
     [SerializeField] FluidLogic CFDLogic;
+    int sideLength;
 
     // Start is called before the first frame update
     void Start()
     {
-        Camera camera = gameObject.GetComponentInChildren<Camera>();
+        Camera camera = FindObjectOfType<Camera>();
         gameObject.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Run Simulation";
-        //camera.transform.position = new Vector3(camera.transform.position.x, camera.transform.position.y, VisLogic.getSL() / 2);
+        camera.transform.position = new Vector3(VisLogic.getSL() / 2, camera.transform.position.y, VisLogic.getSL() * 1.5f);
     }
 
     // Update is called once per frame
@@ -22,5 +23,8 @@ public class UIBehaviour : MonoBehaviour
         
     }
 
-
+    public void setSL(int sideLen)
+    {
+        sideLength = sideLen;
+    }
 }

@@ -39,7 +39,7 @@ public class FluidLogic : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        meshSize = Convert.ToInt32(Math.Pow(2, meshObject.getSL()) + 1); 
+        meshSize = meshObject.getSL(); 
     }
 
     // Update is called once per frame

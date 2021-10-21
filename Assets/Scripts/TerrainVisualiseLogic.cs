@@ -11,21 +11,22 @@ public class TerrainVisualiseLogic : MonoBehaviour
 {
     TerMat Matrix;
     [SerializeField] FluidLogic CFDLogic;
+    [SerializeField] UIBehaviour UILogic;
     [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
     [SerializeField][Range(0.0f, 2f)] double Steepness;
     [SerializeField][Range(1,4)] int inputLen;
     int sideLength;
     double[] modifiers;
-    Vector3[] vertices;
 
     void Start()
     {
-        int sideLengthT = (inputLen * 2) + 3; 
+        int sideLengthT = (inputLen * 2) + 3;
         //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
-        sideLength = sideLengthT;
-        int lenFull = Convert.ToInt32(Math.Pow(2, sideLength) + 1);
+        int lenFull = Convert.ToInt32(Math.Pow(2,sideLengthT))+ 1;
         int seed = Guid.NewGuid().GetHashCode();
+
+        sideLength = lenFull;
 
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
@@ -36,7 +37,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         modifiers = SetModifiers(Roughness, Steepness);
 
         //Generate Matrix and assign to mesh filter
-        Matrix = new TerMat(sideLength, seed, modifiers);
+        Matrix = new TerMat(sideLengthT, seed, modifiers);
         MF.mesh = CreateMesh(Matrix, lenFull);
 
         initSimulation();
@@ -61,7 +62,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         //Assign New Vertices & Set mesh
         Vector3[] newVertices;
         newVertices = SetVertices(input, sideLen * sideLen, sideLen);
-        vertices = newVertices;
         outMesh.vertices = newVertices;
 
         //Find and Set triangles
@@ -224,6 +224,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     public int getSL()
     {
+        Debug.Log(sideLength);
         return sideLength;
     }
 
