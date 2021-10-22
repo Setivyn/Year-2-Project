@@ -50,7 +50,7 @@ public class FluidLogic : MonoBehaviour
 
     public void startStop(int iterations)
     {
-        if (runSimulation) { runSimulation = false; }
+        if (runSimulation) { runSimulation = false; meshObject.SetColours(cubes.density, cubes.count); }
         else { runSimulation = true; simulateLoop(iterations); }
             
     }

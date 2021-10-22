@@ -34,7 +34,7 @@ public class UIBehaviour : MonoBehaviour
         camera.transform.position = new Vector3(x, y, z);
     }
 
-    void runSim()
+    public void runSim()
     {
         VisLogic.changeSimState(4);
     }

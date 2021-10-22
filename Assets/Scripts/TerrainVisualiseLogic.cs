@@ -274,9 +274,24 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return output;
     }
 
-    public void SetColours(double maxVal, double[] values)
+    public void SetColours(float[,,] values, int N)
     {
-        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(maxVal, values);
+        double[] values1D = new double[values.Length];
+        int pointer = 0;
+        for(int k = 0; k < N; k++)
+        {
+            for(int j = 0; j < N; j++)
+            {
+                for(int i = 0; i < N; i++)
+                {
+                    values1D[pointer] = values[i, j, k];
+                    pointer += 1;
+                }
+            }
+        }
+
+
+        gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
     }
 
     Color32[] calcColours(double maxVal, double[] values)
