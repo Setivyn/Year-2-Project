@@ -156,7 +156,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   VisLogic: {fileID: 935443530}
-  CFDLogic: {fileID: 1798946350}
 --- !u!114 &45469710
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -268,6 +267,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   CFDLogic: {fileID: 1798946350}
+  UILogic: {fileID: 0}
   meshMater: {fileID: 2100000, guid: 724f67a022e5a814a9988880cbf8a874, type: 2}
   Roughness: 0.7099999785423279
   Steepness: 0.5099999904632568
@@ -624,13 +624,13 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 45469708}
-        m_TargetAssemblyTypeName: 
-        m_MethodName: 
+      - m_Target: {fileID: 45469709}
+        m_TargetAssemblyTypeName: UIBehaviour, Assembly-CSharp
+        m_MethodName: runSim
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
-          m_ObjectArgumentAssemblyTypeName: 
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
           m_IntArgument: 0
           m_FloatArgument: 0
           m_StringArgument: 
