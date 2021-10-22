@@ -6,25 +6,36 @@ using UnityEngine.UI;
 public class UIBehaviour : MonoBehaviour
 {
     [SerializeField] TerrainVisualiseLogic VisLogic;
-    [SerializeField] FluidLogic CFDLogic;
-    int sideLength;
 
     // Start is called before the first frame update
     void Start()
     {
-        Camera camera = FindObjectOfType<Camera>();
         gameObject.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Run Simulation";
-        camera.transform.position = new Vector3(VisLogic.getSL() / 2, camera.transform.position.y, VisLogic.getSL() * 1.5f);
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+
     }
 
-    public void setSL(int sideLen)
+    public void setCamera()
     {
-        sideLength = sideLen;
+        Camera camera = FindObjectOfType<Camera>();
+        int SLhalf = (VisLogic.getSL() - 1) / 2;
+        float x, y, z;
+
+        x = SLhalf;
+        y = (float)VisLogic.matAtXY(SLhalf, SLhalf) + (Mathf.Tan(Mathf.PI / 6) * (SLhalf * 2.5f));
+        z = SLhalf * 3.5f;
+
+        Debug.Log(x + ", " + y + ", " + z);
+
+        camera.transform.position = new Vector3(x, y, z);
+    }
+
+    void runSim()
+    {
+        VisLogic.changeSimState(4);
     }
 }

@@ -19,14 +19,20 @@ public class TerrainVisualiseLogic : MonoBehaviour
     int sideLength;
     double[] modifiers;
 
+    int sideLengthT;
+    int seed;
+
+    private void Awake()
+    {
+        sideLengthT = (inputLen * 2) + 3;
+        //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
+        seed = Guid.NewGuid().GetHashCode();
+        sideLength = Convert.ToInt32(Math.Pow(2, sideLengthT)) + 1;
+    }
+
     void Start()
     {
-        int sideLengthT = (inputLen * 2) + 3;
-        //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
-        int lenFull = Convert.ToInt32(Math.Pow(2,sideLengthT))+ 1;
-        int seed = Guid.NewGuid().GetHashCode();
-
-        sideLength = lenFull;
+        UILogic = FindObjectOfType<UIBehaviour>();
 
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
@@ -38,9 +44,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         //Generate Matrix and assign to mesh filter
         Matrix = new TerMat(sideLengthT, seed, modifiers);
-        MF.mesh = CreateMesh(Matrix, lenFull);
+        MF.mesh = CreateMesh(Matrix, sideLength);
 
         initSimulation();
+
+        UILogic.setCamera();
     }
 
     // Update is called once per frame
@@ -77,6 +85,10 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return outMesh;
     }
 
+    public double matAtXY(int x, int y)
+    {
+        return Matrix.GetMatrixAtPoint(x, y);
+    }
     double findMax(Vector3[] newVertices)
     {
         double max = 0;
@@ -235,11 +247,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
         CFDLogic.initSimulation();
     }
 
-    void beginSim(int iterations)
+    public void changeSimState(int iterations)
     {
-        CFDLogic.startStop();
-        CFDLogic.simulateLoop(iterations);
+        CFDLogic.startStop(iterations);
     }
+
 
     public double[] findValues(ref double maxVal, TerMat matrix)
     {

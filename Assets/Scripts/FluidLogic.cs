@@ -48,10 +48,10 @@ public class FluidLogic : MonoBehaviour
 
     }
 
-    public void startStop()
+    public void startStop(int iterations)
     {
         if (runSimulation) { runSimulation = false; }
-        else { runSimulation = true; }
+        else { runSimulation = true; simulateLoop(iterations); }
             
     }
 
