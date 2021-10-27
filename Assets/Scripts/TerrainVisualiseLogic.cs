@@ -57,13 +57,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        for (int j = 0; j < cubeN; j++)
-        {
-            for (int i = 0; i < cubeN; i++)
-            {
-                CFDLogic.addVToCube(i, cubeN - 1, j, 0, -sideLength * (int)(Math.Pow(Steepness, 2)), 0);
-            }
-        }
         
     }
 
@@ -267,17 +260,28 @@ public class TerrainVisualiseLogic : MonoBehaviour
     public void changeSimState(int iterations)
     {
         CFDLogic.startStop(iterations);
+        for (int d = 0; d < 1000; d++)
+        {
+            for (int j = 0; j < cubeN; j++)
+            {
+                for (int i = 0; i < cubeN; i++)
+                {
+                    CFDLogic.addVToCube(i, cubeN - 1, j, 0, -sideLength * (int)(Math.Pow(Steepness, 2)), 0);
+                }
+            }
+            System.Threading.Thread.Sleep(2);
+        }
     }
 
 
-    public double[] findValues(ref double maxVal, TerMat matrix)
+    public float[] findValues(ref double maxVal, TerMat matrix)
     {
         int cubeN = CFDLogic.getCubeCount();
         int cubeN2 = cubeN ^ 2;
         float[,,] densities = recieveD();
         int matY;
 
-        double[] output = new double[cubeN2];
+        float[] output = new float[cubeN2];
         for (int i = 0; i < sideLength; i++)
         {
             for(int j = 0; j < sideLength; j++)
@@ -293,30 +297,34 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     public void SetColours(float[,,] values, int N)
     {
-        double[] values1D = new double[values.Length];
+        float[] values1D = new float[(sideLength * sideLength) + (4 * sideLength)];
         int pointer = 0;
+        int size = CFDLogic.getCubeSize();
         for(int k = 0; k < N; k++)
         {
             for(int j = 0; j < N; j++)
             {
-                for(int i = 0; i < N; i++)
+                for (int i = 0; i < N; i++)
                 {
-                    values1D[pointer] = values[i, j, k];
-                    pointer += 1;
+                    if (j * size == Math.Ceiling(Matrix.GetMatrixAtPoint(i * size, k * size))) 
+                    { 
+                        
+                        values1D[pointer] = values[i, j, k];
+                        pointer += 1;
+                    }
                 }
             }
         }
 
-
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
     }
 
-    Color32[] calcColours(double maxVal, double[] values)
+    Color32[] calcColours(float maxVal, float[] values)
     {
         Color32[] newCols = new Color32[values.Length];
         int pointer = 0;
 
-        foreach(double v in values)
+        foreach(float v in values)
         {
             newCols[pointer] = UnityEngine.Color.HSVToRGB(1 - findDiff(maxVal, v), 0.5f, 1);
             pointer += 1;
