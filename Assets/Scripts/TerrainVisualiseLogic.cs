@@ -14,10 +14,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
     [SerializeField] UIBehaviour UILogic;
     [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
-    [SerializeField][Range(0.0f, 2f)] double Steepness;
+    [SerializeField][Range(0.0f, 0.8f)] double Steepness;
     [SerializeField][Range(1,4)] int inputLen;
     int sideLength;
     double[] modifiers;
+    int cubeN;
 
     int sideLengthT;
     int seed;
@@ -49,11 +50,20 @@ public class TerrainVisualiseLogic : MonoBehaviour
         initSimulation();
 
         UILogic.setCamera();
+
+        cubeN = CFDLogic.getCubeCount();
     }
 
     // Update is called once per frame
     void Update()
     {
+        for (int j = 0; j < cubeN; j++)
+        {
+            for (int i = 0; i < cubeN; i++)
+            {
+                CFDLogic.addVToCube(i, cubeN - 1, j, 0, -sideLength * (int)(Math.Pow(Steepness, 2)), 0);
+            }
+        }
         
     }
 
@@ -236,7 +246,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     public int getSL()
     {
-        Debug.Log(sideLength);
         return sideLength;
     }
 
@@ -244,7 +253,15 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     void initSimulation()
     {
-        CFDLogic.initSimulation();
+        CFDLogic.initSimulation(sideLength);
+        for(int j = 0; j< cubeN; j++)
+        {
+            for (int i = 0; i < cubeN; i++)
+            {
+                 CFDLogic.addDToCube(i, cubeN - 1, j, 100);
+            }
+        }
+        
     }
 
     public void changeSimState(int iterations)

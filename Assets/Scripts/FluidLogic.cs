@@ -32,14 +32,12 @@ public class FluidLogic : MonoBehaviour
     [SerializeField] [Range(1f, 100f)] float dtI;
 
     GridCube cubes;
-    int meshSize;
 
     bool runSimulation;
 
     // Start is called before the first frame update
     void Start()
     {
-        meshSize = meshObject.getSL(); 
     }
 
     // Update is called once per frame
@@ -55,7 +53,7 @@ public class FluidLogic : MonoBehaviour
             
     }
 
-    public void initSimulation()
+    public void initSimulation(int meshSize)
     {
         cubes = DefineCube(divSizeI, diffI, viscI, dtI, meshSize);
     }
@@ -108,8 +106,11 @@ public class FluidLogic : MonoBehaviour
         //} Passer Values, allows transfer of struct properties without annoying compiler
 
         //{
+        Debug.Log("Vx diff");
         diffuse(1, Vx0, ref Vx, cube.diff, cube.dt, iterations, cube.count);
+        Debug.Log("Vy diff");
         diffuse(2, Vy0, ref Vy, cube.diff, cube.dt, iterations, cube.count);
+        Debug.Log("Vy diff");
         diffuse(3, Vz0, ref Vz, cube.diff, cube.dt, iterations, cube.count);
 
         project(ref Vx0, ref Vy0, ref Vz0, ref Vx, ref Vy, iterations, cube.count);
@@ -140,16 +141,17 @@ public class FluidLogic : MonoBehaviour
     void diffuse(int d, float[,,] Vq0, ref float[,,] Vq, float diff, float dt, int iter, int N)
     {
         float a = dt * diff * (N - 2) * (N * 2);
+        Debug.Log("diff lin");
         linearSolve(d, ref Vq, Vq0, a, 1 + (6 * a), iter, N); 
     }
 
     void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
     {
-        for (int k = 0; k < N - 1; k++)
+        for (int k = 1; k < N - 1; k++)
         {
-            for (int j = 0; j < N - 1; j++)
+            for (int j = 1; j < N - 1; j++)
             {
-                for (int i = 0; i < N - 1; i++)
+                for (int i = 1; i < N - 1; i++)
                 {
                     div[i, j, k] = -0.5f * (
                          Vx1[i + 1, j, k]
@@ -164,15 +166,18 @@ public class FluidLogic : MonoBehaviour
 
         }
 
+        Debug.Log("div rstBND");
         resetBounds(0, ref div, N);
+        Debug.Log("p rstBND");
         resetBounds(0, ref p, N);
+        Debug.Log("proj lin");
         linearSolve(0, ref p, div, 1, 6, iter, N);
 
-        for (int k = 0; k < N - 1; k++)
+        for (int k = 1; k < N - 1; k++)
         {
-            for (int j = 0; j < N - 1; j++)
+            for (int j = 1; j < N - 1; j++)
             {
-                for (int i = 0; i < N - 1; i++)
+                for (int i = 1; i < N - 1; i++)
                 {
                     Vx1[i, j, k] -= 0.5f * (p[i + 1, j, k]
                                            +p[i - 1, j, k]) * N;
@@ -184,9 +189,11 @@ public class FluidLogic : MonoBehaviour
             }
 
         }
-
+        Debug.Log("Vx rstBND");
         resetBounds(1, ref Vx1, N);
+        Debug.Log("Vy rstBND");
         resetBounds(2, ref Vy1, N);
+        Debug.Log("Vz rstBND");
         resetBounds(3, ref Vz1, N);
 
     }
@@ -258,7 +265,7 @@ public class FluidLogic : MonoBehaviour
             }
         }
 
-
+        Debug.Log("advect rstBND");
         resetBounds(d, ref Vq, N);
     }
 
@@ -267,12 +274,13 @@ public class FluidLogic : MonoBehaviour
         float cRecip = 1 / c;
         for(int m = 0; m < iterations; m++)
         {
-            for(int k = 0; k < N - 1; k++)
+            for(int k = 1; k < N - 1; k++)
             {
-                for(int j = 0; j < N - 1; j++)
+                for(int j = 1; j < N - 1; j++)
                 {
-                    for(int i = 0; i < N - 1; i++)
+                    for(int i = 1; i < N - 1; i++)
                     {
+                        Debug.Log(i + ", " + j + ", " + k);
                         q[i, j, k] = (q0[i, j, k]
                             + a * (q[i+1, j, k] +
                                    q[i-1, j, k] +
@@ -283,6 +291,7 @@ public class FluidLogic : MonoBehaviour
                     }
                 }
             }
+            Debug.Log("linsolve rstBND");
             resetBounds(b, ref q, N);
         }
     }
@@ -315,7 +324,7 @@ public class FluidLogic : MonoBehaviour
                 q[N - 1, j, k] = b == 1 ? -q[N - 2, j, k] : q[N - 2, j, k];
             }
         }
-
+        Debug.Log(q.Length);
         q[0, 0, 0]             = 0.33f * (q[1, 0, 0]
                                         + q[0, 1, 0]
                                         + q[0, 0, 1]);
@@ -342,12 +351,12 @@ public class FluidLogic : MonoBehaviour
                                         + q[N - 1, N - 1, N - 2]);
     }
 
-    void addDToCube(ref GridCube cubes, int x, int y, int z, float amount)
+    public void addDToCube(int x, int y, int z, float amount)
     {
         cubes.density[x,y,z] += amount;
     }
 
-    void addVToCube(ref GridCube cubes, int x, int y, int z, int Vx1, int Vy1, int Vz1)
+    public void addVToCube(int x, int y, int z, int Vx1, int Vy1, int Vz1)
     {
         cubes.Vx[x, y, z] = Vx1;
         cubes.Vy[x, y, z] = Vy1;

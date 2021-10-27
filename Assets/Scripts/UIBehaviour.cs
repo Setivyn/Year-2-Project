@@ -29,8 +29,6 @@ public class UIBehaviour : MonoBehaviour
         y = (float)VisLogic.matAtXY(SLhalf, SLhalf) + (Mathf.Tan(Mathf.PI / 6) * (SLhalf * 2.5f));
         z = SLhalf * 3.5f;
 
-        Debug.Log(x + ", " + y + ", " + z);
-
         camera.transform.position = new Vector3(x, y, z);
     }
 
