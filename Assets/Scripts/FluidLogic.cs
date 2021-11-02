@@ -135,16 +135,18 @@ public class FluidLogic : MonoBehaviour
         cube.d0 = d0;
         //} Pass Back new Values
         //{
-        Debug.Log(dens[1,1,1]);
-        diffuse(0, cube.d0, ref dens, cube.visc, cube.dt, iterations, cube.size);
+        //Debug.Log(dens[1,1,1]);
+        diffuse(0, cube.d0, ref dens, cube.visc, cube.dt, iterations, cube.count);
         advect(1, ref dens, cube.d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
         //} Move Dye
     }
 
-    void diffuse(int d, float[,,] Vq0, ref float[,,] Vq, float diff, float dt, int iter, int N)
+    void diffuse(int d, float[,,] q0, ref float[,,] q, float diff, float dt, int iter, int N)
     {
-        float a = dt * diff * (N - 2) * (N * 2);
-        linearSolve(d, ref Vq, Vq0, a, 1 + (6 * a), iter, N); 
+        
+        float a = dt * diff * (N - 2) * (N - 2);
+        linearSolve(d, ref q, q0, a, 1 + (6 * a), iter, N);
+        Debug.Log(q[1, 1, 1] + ": v, " + q0[1, 1, 1] + ": v0, a:" + a + "; ");
     }
 
     void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
@@ -285,6 +287,7 @@ public class FluidLogic : MonoBehaviour
                 }
             }
             resetBounds(b, ref q, N);
+            //Debug.Log("q: " + q[1, 1, 1]);
         }
     }
 
@@ -349,9 +352,9 @@ public class FluidLogic : MonoBehaviour
 
     public void addVToCube(int x, int y, int z, int Vx1, int Vy1, int Vz1)
     {
-        cubes.Vx[x, y, z] = Vx1;
-        cubes.Vy[x, y, z] = Vy1;
-        cubes.Vz[x, y, z] = Vz1;
+        cubes.Vx[x, y, z] += Vx1;
+        cubes.Vy[x, y, z] += Vy1;
+        cubes.Vz[x, y, z] += Vz1;
     }
 
     public int getCubeCount()

@@ -266,7 +266,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
             {
                 for (int i = 0; i < cubeN; i++)
                 {
-                    CFDLogic.addVToCube(i, cubeN - 1, j, 0, -sideLength * (int)(Math.Pow(Steepness, 2)), 0);
+                    CFDLogic.addVToCube(i, cubeN - 1, j, 0, (int)(-sideLength * Math.Pow(Steepness, 2) * 0.5), 0);
+                    CFDLogic.addVToCube(i, cubeN - 2, j, 0, (int)(-sideLength * Math.Pow(Steepness, 2) * 0.5), 0);
                 }
             }
             System.Threading.Thread.Sleep(2);
