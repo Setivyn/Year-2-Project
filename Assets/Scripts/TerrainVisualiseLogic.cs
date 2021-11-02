@@ -50,8 +50,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         initSimulation();
 
         UILogic.setCamera();
-
-        cubeN = CFDLogic.getCubeCount();
     }
 
     // Update is called once per frame
@@ -247,11 +245,12 @@ public class TerrainVisualiseLogic : MonoBehaviour
     void initSimulation()
     {
         CFDLogic.initSimulation(sideLength);
-        for(int j = 0; j< cubeN; j++)
+        cubeN = CFDLogic.getCubeCount();
+        for (int j = 0; j < cubeN; j++)
         {
             for (int i = 0; i < cubeN; i++)
             {
-                 CFDLogic.addDToCube(i, cubeN - 1, j, 100);
+                CFDLogic.addDToCube(i, cubeN - 1, j, 100);
             }
         }
         
@@ -266,6 +265,10 @@ public class TerrainVisualiseLogic : MonoBehaviour
             {
                 for (int i = 0; i < cubeN; i++)
                 {
+                    /*if(i == 1 && j == 1)
+                        {
+                        Debug.Log("V added to [1,41,1]"); //Adding simulataneously is the issue....
+                        }*/
                     CFDLogic.addVToCube(i, cubeN - 1, j, 0, (int)(-sideLength * Math.Pow(Steepness, 2) * 0.5), 0);
                     CFDLogic.addVToCube(i, cubeN - 2, j, 0, (int)(-sideLength * Math.Pow(Steepness, 2) * 0.5), 0);
                 }

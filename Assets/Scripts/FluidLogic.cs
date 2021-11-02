@@ -146,7 +146,6 @@ public class FluidLogic : MonoBehaviour
         
         float a = dt * diff * (N - 2) * (N - 2);
         linearSolve(d, ref q, q0, a, 1 + (6 * a), iter, N);
-        Debug.Log(q[1, 1, 1] + ": v, " + q0[1, 1, 1] + ": v0, a:" + a + "; ");
     }
 
     void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
@@ -286,8 +285,9 @@ public class FluidLogic : MonoBehaviour
                     }
                 }
             }
+            //Debug.Log("q: " + q[1, N - 2, 1]);
             resetBounds(b, ref q, N);
-            //Debug.Log("q: " + q[1, 1, 1]);
+            //Debug.Log("q1: " + q[1, N - 2, 1]);
         }
     }
 
