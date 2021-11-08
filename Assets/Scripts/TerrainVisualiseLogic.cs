@@ -246,46 +246,33 @@ public class TerrainVisualiseLogic : MonoBehaviour
     {
         CFDLogic.initSimulation(sideLength);
         cubeN = CFDLogic.getCubeCount();
-        for (int j = 0; j < cubeN; j++)
+        for (int j = 1; j < cubeN - 1; j++)
         {
-            for (int i = 0; i < cubeN; i++)
+            for (int i = 1; i < cubeN - 1; i++)
             {
-                CFDLogic.addDToCube(i, cubeN - 1, j, 100);
+                CFDLogic.addDToCube(i, cubeN - 2, j, 100);
             }
         }
+        Debug.Log("D added");
         
     }
 
     public void changeSimState(int iterations)
     {
+        CFDLogic.addVToCube(cubeN - 1, 0, (-sideLength * Math.Pow(Steepness, 2)), 0);
         CFDLogic.startStop(iterations);
-        for (int d = 0; d < 1000; d++)
-        {
-            for (int j = 0; j < cubeN; j++)
-            {
-                for (int i = 0; i < cubeN; i++)
-                {
-                    /*if(i == 1 && j == 1)
-                        {
-                        Debug.Log("V added to [1,41,1]"); //Adding simulataneously is the issue....
-                        }*/
-                    CFDLogic.addVToCube(i, cubeN - 1, j, 0, (int)(-sideLength * Math.Pow(Steepness, 2) * 0.5), 0);
-                    CFDLogic.addVToCube(i, cubeN - 2, j, 0, (int)(-sideLength * Math.Pow(Steepness, 2) * 0.5), 0);
-                }
-            }
-            System.Threading.Thread.Sleep(2);
-        }
+
     }
 
 
-    public float[] findValues(ref double maxVal, TerMat matrix)
+    public double[] findValues(ref double maxVal, TerMat matrix)
     {
         int cubeN = CFDLogic.getCubeCount();
         int cubeN2 = cubeN ^ 2;
-        float[,,] densities = recieveD();
+        double[,,] densities = recieveD();
         int matY;
 
-        float[] output = new float[cubeN2];
+        double[] output = new double[cubeN2];
         for (int i = 0; i < sideLength; i++)
         {
             for(int j = 0; j < sideLength; j++)
@@ -299,9 +286,9 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return output;
     }
 
-    public void SetColours(float[,,] values, int N)
+    public void SetColours(double[,,] values, int N)
     {
-        float[] values1D = new float[(sideLength * sideLength) + (4 * sideLength)];
+        double[] values1D = new double[(sideLength * sideLength) + (4 * sideLength)];
         int pointer = 0;
         int size = CFDLogic.getCubeSize();
         for(int k = 0; k < N; k++)
@@ -323,7 +310,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
     }
 
-    Color32[] calcColours(float maxVal, float[] values)
+    Color32[] calcColours(double maxVal, double[] values)
     {
         Color32[] newCols = new Color32[values.Length];
         int pointer = 0;
@@ -345,11 +332,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return output;
     }
 
-    float[,,] recieveD()
+    double[,,] recieveD()
     {
         int cubeN = CFDLogic.getCubeCount();
 
-        float[,,] densOut = new float[cubeN, cubeN, cubeN];
+        double[,,] densOut = new double[cubeN, cubeN, cubeN];
 
 
         for (int k = 0; k < cubeN; k++)

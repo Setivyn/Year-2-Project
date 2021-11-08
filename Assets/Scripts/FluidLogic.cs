@@ -6,34 +6,38 @@ using UnityEngine;
 struct GridCube //whole grid structure, each index is smaller cubes of size (int size)
 {
     public int size { get; set; } //Cube size, Time step, Diffusion Rate, Viscosity
-    public float dt { get; set; }
-    public float diff { get; set; }
-    public float visc { get; set; }
+    public double dt { get; set; }
+    public double diff { get; set; }
+    public double visc { get; set; }
     public int count { get; set; }
 
-    public float[,,] density { get; set; }  //Density, Prev Density
-    public float[,,] d0 { get; set; }
+    public double[,,] density { get; set; }  //Density, Prev Density
+    public double[,,] d0 { get; set; }
 
-    public float[,,] Vx { get; set; } //V, Prev V
-    public float[,,] Vy { get; set; }
-    public float[,,] Vz { get; set; }
+    public double[,,] Vx { get; set; } //V, Prev V
+    public double[,,] Vy { get; set; }
+    public double[,,] Vz { get; set; }
 
-    public float[,,] Vx0 { get; set; }
-    public float[,,] Vy0 { get; set; }
-    public float[,,] Vz0 { get; set; }
+    public double[,,] Vx0 { get; set; }
+    public double[,,] Vy0 { get; set; }
+    public double[,,] Vz0 { get; set; }
 }
 
 public class FluidLogic : MonoBehaviour
 {
     [SerializeField] TerrainVisualiseLogic meshObject;
     [SerializeField] [Range(1,5)]int divSizeI = 3;
-    [SerializeField] [Range(0f, 1f)] float diffI;
-    [SerializeField] [Range(0f, 1f)] float viscI;
-    [SerializeField] [Range(1f, 100f)] float dtI;
+    [SerializeField] [Range(0f, 1f)] double diffI;
+    [SerializeField] [Range(0f, 1f)] double viscI;
+    [SerializeField] [Range(1f, 100f)] double dtI;
 
     GridCube cubes;
 
-    bool runSimulation;
+    bool runSimulation = false;
+
+    double IVx, IVy, IVz;
+    bool addVBool;
+    int Iy;
 
     // Start is called before the first frame update
     void Start()
@@ -61,19 +65,20 @@ public class FluidLogic : MonoBehaviour
     public void simulateLoop(int iterations)
     {
         if (runSimulation){
-            for(int i = 0; i < 1000; i ++)
+            for(int i = 0; i < 100; i ++)
             {
                 EnactTimeStep(cubes, iterations);
-                System.Threading.Thread.Sleep((int)Math.Floor(cubes.dt) + 1);
+                //System.Threading.Thread.Sleep((int)Math.Floor(cubes.dt) + 1);
             }
             startStop(iterations);
         }
         
     }
 
-    GridCube DefineCube(int size, float diffusion, float viscosity, float dt, int meshSize)
+    GridCube DefineCube(int size, double diffusion, double viscosity, double dt, int meshSize)
     {
         int N = meshSize / size;
+
         GridCube newCube = new GridCube();
         newCube.size = size;
         newCube.dt = dt;
@@ -81,16 +86,16 @@ public class FluidLogic : MonoBehaviour
         newCube.visc = viscosity;
         newCube.count = N;
 
-        newCube.d0 = new float[N, N, N];
-        newCube.density = new float[N, N, N];
+        newCube.d0 = new double[N, N, N];
+        newCube.density = new double[N, N, N];
 
-        newCube.Vx = new float[N, N, N];
-        newCube.Vy = new float[N, N, N];
-        newCube.Vz = new float[N, N, N];
+        newCube.Vx = new double[N, N, N];
+        newCube.Vy = new double[N, N, N];
+        newCube.Vz = new double[N, N, N];
 
-        newCube.Vx0 = new float[N, N, N];
-        newCube.Vy0 = new float[N, N, N];
-        newCube.Vz0 = new float[N, N, N];
+        newCube.Vx0 = new double[N, N, N];
+        newCube.Vy0 = new double[N, N, N];
+        newCube.Vz0 = new double[N, N, N];
 
         return newCube;
     }
@@ -98,31 +103,53 @@ public class FluidLogic : MonoBehaviour
     void EnactTimeStep(GridCube cube, int iterations)
     {
         //{
-        float[,,] Vx = cube.Vx;
-        float[,,] Vy = cube.Vy;
-        float[,,] Vz = cube.Vz;
-        float[,,] Vx0 = cube.Vx0;
-        float[,,] Vy0 = cube.Vy0;
-        float[,,] Vz0 = cube.Vz0;
+        double[,,] Vx = cube.Vx;
+        double[,,] Vy = cube.Vy;
+        double[,,] Vz = cube.Vz;
+        double[,,] Vx0 = cube.Vx0;
+        double[,,] Vy0 = cube.Vy0;
+        double[,,] Vz0 = cube.Vz0;
 
-        float[,,] dens = cube.density;
-        float[,,] d0 = cube.d0;
+        double[,,] dens = cube.density;
+        double[,,] d0 = cube.d0;
+
+        if(addVBool)
+        {
+            for (int j = 1; j < cube.count - 1; j++)
+            {
+                for (int i = 1; i < cube.count - 1; i++)
+                {
+                    Vx[i, Iy, j] += IVx;
+                    Vy[i, Iy, j] += IVy;
+                    Vz[i, Iy, j] += IVz;
+                }
+            }
+        }
 
         //} Passer Values, allows transfer of struct properties without annoying compiler
 
         //{
-        diffuse(1, Vx0, ref Vx, cube.diff, cube.dt, iterations, cube.count);
-        diffuse(2, Vy0, ref Vy, cube.diff, cube.dt, iterations, cube.count);
-        diffuse(3, Vz0, ref Vz, cube.diff, cube.dt, iterations, cube.count);
+        //diffuse(1, ref Vx0, ref Vx, cube.diff, cube.dt, iterations, cube.count);
+       // diffuse(2, ref Vy0, ref Vy, cube.diff, cube.dt, iterations, cube.count);
+       // diffuse(3, ref Vz0, ref Vz, cube.diff, cube.dt, iterations, cube.count);
 
-        project(ref Vx0, ref Vy0, ref Vz0, ref Vx, ref Vy, iterations, cube.count);
+        //project(ref Vx0, ref Vy0, ref Vz0, ref Vx, ref Vy, iterations, cube.count);
 
-        advect(1, ref Vx, Vx0, Vx, Vy, Vz, cube.dt, cube.count);
+        /*advect(1, ref Vx, Vx0, Vx, Vy, Vz, cube.dt, cube.count);
         advect(2, ref Vy, Vy0, Vx, Vy, Vz, cube.dt, cube.count);
-        advect(3, ref Vz, Vz0, Vx, Vy, Vz, cube.dt, cube.count);
+        advect(3, ref Vz, Vz0, Vx, Vy, Vz, cube.dt, cube.count);*/
 
-        project(ref Vx, ref Vy, ref Vz, ref Vx0, ref Vy0, iterations, cube.count);
+        //project(ref Vx, ref Vy, ref Vz, ref Vx0, ref Vy0, iterations, cube.count);
         //} Move Velocities
+
+        //{
+        //Debug.Log("d: " + dens[1, cube.count - 2, 1]);
+        diffuse(0, ref d0, ref dens, cube.visc, cube.dt, iterations, cube.count);
+        Debug.Log("2: " + dens[1, cube.count - 2, 1]);
+        advect(1, ref dens, d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
+        Debug.Log("3: " + dens[1, cube.count - 2, 1]);
+        //} Move Dye
+
         //{
         cube.Vx = Vx;
         cube.Vy = Vy;
@@ -134,21 +161,17 @@ public class FluidLogic : MonoBehaviour
         cube.density = dens;
         cube.d0 = d0;
         //} Pass Back new Values
-        //{
-        //Debug.Log(dens[1,1,1]);
-        diffuse(0, cube.d0, ref dens, cube.visc, cube.dt, iterations, cube.count);
-        advect(1, ref dens, cube.d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        //} Move Dye
     }
 
-    void diffuse(int d, float[,,] q0, ref float[,,] q, float diff, float dt, int iter, int N)
+    void diffuse(int d, ref double[,,] q0, ref double[,,] q, double diff, double dt, int iter, int N)
     {
-        
-        float a = dt * diff * (N - 2) * (N - 2);
-        linearSolve(d, ref q, q0, a, 1 + (6 * a), iter, N);
+
+        double a = dt * diff * (N - 2) * (N - 2);
+        // Debug.Log("Constant A: " + a);
+        linearSolve(d, ref q0, q, a, 1 + (6 * a), iter, N);
     }
 
-    void project(ref float[,,] Vx1, ref float[,,] Vy1, ref float[,,] Vz1, ref float[,,] p, ref float[,,] div, int iter, int N)
+    void project(ref double[,,] Vx1, ref double[,,] Vy1, ref double[,,] Vz1, ref double[,,] p, ref double[,,] div, int iter, int N)
     {
         for (int k = 1; k < N - 1; k++)
         {
@@ -194,15 +217,14 @@ public class FluidLogic : MonoBehaviour
 
     }
 
-    void advect(int d, ref float[,,] Vq, float[,,] Vq0, float[,,] Vx, float[,,] Vy, float[,,] Vz, float dt, int N)
+    void advect(int d, ref double[,,] Vq, double[,,] Vq0, double[,,] Vx, double[,,] Vy, double[,,] Vz, double dt, int N)
     {
-        float i0, i1, j0, j1, k0, k1;
+        double i0, i1, j0, j1, k0, k1;
 
-        float dtx, dty, dtz;
-        dtx = dty = dtz = dt * (N - 2);
+        double dt0;
+        dt0 = dt * (N - 2);
 
-        float s0, s1, t0, t1, u0, u1;
-        float tmp1, tmp2, tmp3, x, y, z;
+        double s0, s1, t0, t1, u0, u1, x, y, z;
 
         int i, j, k;
 
@@ -212,33 +234,18 @@ public class FluidLogic : MonoBehaviour
             {
                 for (i = 1; i < N - 1; i++)
                 {
-                    tmp1 = dtx * Vx[i, j, k];
-                    tmp2 = dty * Vy[i, j, k];
-                    tmp3 = dtz * Vz[i, j, k];
 
-                    x = i - tmp1;
-                    y = j - tmp2;
-                    z = k - tmp3;
+                    x = i - (dt0 * Vx[i, j, k]);
+                    y = j - (dt0 * Vy[i, j, k]);
+                    z = k - (dt0 * Vz[i, j, k]);
 
-                    if (x < 0.5f) { x = 0.5f; }
-                    if (x > N + 0.5f) { x = N + 0.5f; }
-                    i0 = Mathf.Floor(x);
-                    i1 = i0 + 1f;
-                    if (y < 0.5f) { y = 0.5f; }
-                    if (y > N + 0.5f) { y = N + 0.5f; }
-                    j0 = Mathf.Floor(y);
-                    j1 = j0 + 1f;
-                    if (z < 0.5f) { z = 0.5f; }
-                    if (z > N + 0.5f) { z = N + 0.5f; }
-                    k0 = Mathf.Floor(z);
-                    k1 = k0 + 1f;
+                    x = clampAdv(N, out i0, out i1, x);
+                    y = clampAdv(N, out j0, out j1, y);
+                    z = clampAdv(N, out k0, out k1, z);
 
-                    s1 = x - i0;
-                    s0 = 1f - s1;
-                    t1 = x - j0;
-                    t0 = 1f - t1;
-                    u1 = x - i0;
-                    u0 = 1f - u1;
+                    calcCoeffAdv(i0, out s0, out s1, x);
+                    calcCoeffAdv(j0, out t0, out t1, y);
+                    calcCoeffAdv(k0, out u0, out u1, z);
 
                     int i0I = (int)i0;
                     int i1I = (int)i1;
@@ -249,10 +256,10 @@ public class FluidLogic : MonoBehaviour
 
                     Vq[i, j, k] = (
                         s0 * (t0 * (u0 * Vq0[i0I, j0I, k0I]
-                                   +u1 * Vq0[i0I, j0I, k1I])
-                             +(t1 * (u0 * Vq0[i0I, j1I, k0I]
+                                   + u1 * Vq0[i0I, j0I, k1I])
+                             + (t1 * (u0 * Vq0[i0I, j1I, k0I]
                                    + u1 * Vq0[i0I, j1I, k1I])))
-                       +s1 * (t0 * (u0 * Vq0[i1I, j0I, k0I]
+                       + s1 * (t0 * (u0 * Vq0[i1I, j0I, k0I]
                                    + u1 * Vq0[i1I, j0I, k1I])
                              + (t1 * (u0 * Vq0[i1I, j1I, k0I]
                                    + u1 * Vq0[i1I, j1I, k1I])))
@@ -264,14 +271,30 @@ public class FluidLogic : MonoBehaviour
         resetBounds(d, ref Vq, N);
     }
 
-    void linearSolve(int b, ref float[,,] q, float[,,] q0, float a, float c, int iterations, int N)
+    private static void calcCoeffAdv(double i0, out double s0, out double s1, double x)
     {
-        float cRecip = 1 / c;
+        s1 = x - i0;
+        s0 = 1f - s1;
+    }
+
+    private static double clampAdv(int N, out double a0, out double a1, double q)
+    {
+        if (q < 0.5f) { q = 0.5f; }
+        if (q > N + 0.5f) { q = N + 0.5f; }
+        a0 = Math.Floor(q);
+        a1 = a0 + 1f;
+        return q;
+    }
+
+    void linearSolve(int b, ref double[,,] q, double[,,] q0, double a, double c, int iterations, int N)
+    {
+        //Debug.Log(q[20, 41, 20]);
+        double cRecip = 1 / c;
         for(int m = 0; m < iterations; m++)
         {
-            for(int k = 1; k < N - 1; k++)
+            for(int j = N - 2; j > 0; j--)
             {
-                for(int j = 1; j < N - 1; j++)
+                for(int k = 1; k < N - 1; k++)
                 {
                     for(int i = 1; i < N - 1; i++)
                     {
@@ -282,16 +305,26 @@ public class FluidLogic : MonoBehaviour
                                    q[i, j-1, k] +
                                    q[i, j, k+1] +
                                    q[i, j, k-1] )) * cRecip;
+                        
                     }
                 }
+                /*Debug.Log("Orig=" + q0[20, j, 20]);
+                Debug.Log("X:" + 20 + " Y:" + j + " Z:" + 20 + " Val:" + q[20, j, 20]);
+                Debug.Log("A=" + a + " cRecip=" + cRecip + "Sum Adj. = " + (q[20 + 1, j, 20] +
+                                   q[20 - 1, j, 20] +
+                                   q[20, j + 1, 20] +
+                                   q[20, j - 1, 20] +
+                                   q[20, j, 20 + 1] +
+                                   q[20, j, 20 - 1]));*/
             }
+            
             //Debug.Log("q: " + q[1, N - 2, 1]);
-            resetBounds(b, ref q, N);
+            //resetBounds(b, ref q, N);
             //Debug.Log("q1: " + q[1, N - 2, 1]);
         }
     }
 
-    void resetBounds(float b, ref float[,,] q, int N)
+    void resetBounds(double b, ref double[,,] q, int N)
     {
         for(int j = 1; j < N-1; j ++)
         {
@@ -345,24 +378,29 @@ public class FluidLogic : MonoBehaviour
                                         + q[N - 1, N - 1, N - 2]);
     }
 
-    public void addDToCube(int x, int y, int z, float amount)
+    public void addDToCube(int x, int y, int z, double amount)
     {
         cubes.density[x,y,z] += amount;
     }
 
-    public void addVToCube(int x, int y, int z, int Vx1, int Vy1, int Vz1)
+    public void addVToCube(int y, double Vx1, double Vy1, double Vz1)
     {
-        cubes.Vx[x, y, z] += Vx1;
-        cubes.Vy[x, y, z] += Vy1;
-        cubes.Vz[x, y, z] += Vz1;
+        addVBool = true;
+        IVx = Vx1;
+        IVy = Vy1;
+        IVz = Vz1;
+
+        Iy = y;
     }
+
+    
 
     public int getCubeCount()
     {
         return cubes.count;
     }
 
-    public float getDensityAtCube(int x, int y, int z)
+    public double getDensityAtCube(int x, int y, int z)
     {
         return cubes.density[x, y, z];
     }
