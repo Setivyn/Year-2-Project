@@ -286,7 +286,7 @@ public class FluidLogic : MonoBehaviour
         return q;
     }
 
-    void linearSolve(int b, ref double[,,] q, double[,,] q0, double a, double c, int iterations, int N)
+    void linearSolve(int dimension, ref double[,,] q, double[,,] q0, double a, double c, int iterations, int N)
     {
         //Debug.Log(q[20, 41, 20]);
         double cRecip = 1 / c;
@@ -324,14 +324,15 @@ public class FluidLogic : MonoBehaviour
         }
     }
 
-    void resetBounds(double b, ref double[,,] q, int N)
+    void resetBounds(double dimension, ref double[,,] q, int N)
     {
-        for(int j = 1; j < N-1; j ++)
+        int y = 1;
+        for(int j = 1; j < N - 1; j ++)
         {
             for(int i = 1; i < N - 1; i++)
             {
-                q[i, j, 0    ] = b == 3 ? -q[i, j, 1    ] : q[i, j, 1    ];
-                q[i, j, N - 1] = b == 3 ? -q[i, j, N - 2] : q[i, j, N - 2];
+                q[i, j, 0    ] = dimension == 3 ? -q[i, j, 1    ] : q[i, j, 1    ];
+                q[i, j, N - 1] = dimension == 3 ? -q[i, j, N - 2] : q[i, j, N - 2];
             }
         }
 
@@ -339,8 +340,9 @@ public class FluidLogic : MonoBehaviour
         {
             for (int i = 1; i < N - 1; i++)
             {
-                q[i, 0, k    ] = b == 2 ? -q[i, 1, k    ] : q[i, 1, k    ];
-                q[i, N - 1, k] = b == 2 ? -q[i, N - 2, k] : q[i, N - 2, k];
+                q[i, 0, k    ] = dimension == 2 ? -q[i, 1, k    ] : q[i, 1, k    ];
+                q[i, N - 1, k] = dimension == 2 ? -q[i, N - 2, k] : q[i, N - 2, k];
+                
             }
         }
 
@@ -348,10 +350,21 @@ public class FluidLogic : MonoBehaviour
         {
             for (int j = 1; j < N - 1; j++)
             {
-                q[0, j, k    ] = b == 1 ? -q[1, j, k    ] : q[1, j, k    ];
-                q[N - 1, j, k] = b == 1 ? -q[N - 2, j, k] : q[N - 2, j, k];
+                q[0, j, k    ] = dimension == 1 ? -q[1, j, k    ] : q[1, j, k    ];
+                q[N - 1, j, k] = dimension == 1 ? -q[N - 2, j, k] : q[N - 2, j, k];
             }
         }
+
+        for (int k = 1; k < N - 1; k++)
+        {
+            for (int i = 1; i < N - 1; i++)
+            {
+                //get terrain at point either side, in dimension. follow downward trends, dont touch y.
+                //if signs match between qV and terrain gradient direction, flip vel. else do nothin
+                //weighted average of velocity and terrain gradient
+            }
+        }
+
         q[0, 0, 0]             = 0.33f * (q[1, 0, 0]
                                         + q[0, 1, 0]
                                         + q[0, 0, 1]);
