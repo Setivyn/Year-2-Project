@@ -5,11 +5,12 @@ using UnityEngine.UI;
 
 public class UIBehaviour : MonoBehaviour
 {
-    [SerializeField] TerrainVisualiseLogic VisLogic;
+    LinkBehaviour linkLogic;
 
     // Start is called before the first frame update
     void Start()
     {
+        linkLogic = FindObjectOfType<LinkBehaviour>();
         gameObject.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Run Simulation";
     }
 
@@ -22,11 +23,11 @@ public class UIBehaviour : MonoBehaviour
     public void setCamera()
     {
         Camera camera = FindObjectOfType<Camera>();
-        int SLhalf = (VisLogic.getSL() - 1) / 2;
+        int SLhalf = (linkLogic.getSL() - 1) / 2;
         float x, y, z;
 
         x = SLhalf;
-        y = (float)VisLogic.matAtXY(SLhalf, SLhalf) + (Mathf.Tan(Mathf.PI / 6) * (SLhalf * 2.5f));
+        y = (float)linkLogic.matAtXY(SLhalf, SLhalf) + (Mathf.Tan(Mathf.PI / 6) * (SLhalf * 2.5f));
         z = SLhalf * 3.5f;
 
         camera.transform.position = new Vector3(x, y, z);
@@ -34,6 +35,6 @@ public class UIBehaviour : MonoBehaviour
 
     public void runSim()
     {
-        VisLogic.changeSimState(4);
+        linkLogic.changeSim(4);
     }
 }

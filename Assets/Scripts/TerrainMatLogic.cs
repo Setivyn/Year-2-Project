@@ -118,6 +118,7 @@ public class TerMat
         int chunkLen = Convert.ToInt32(Mathf.Pow(2, sideLenPow));
         noise = Math.Floor((rand.NextDouble() - 0.5) * chunkLen); //Smaller grid generate less noise, which means the grid wont experience massive spikes at random.
         altitudeMap[Center[0], Center[1]] = AveragePointsCenter(chunkLen, Center) + (noise * noiseMod);
+        altitudeMap[Center[0], Center[1]] = altitudeMap[Center[0], Center[1]] < 0 ? 0 : altitudeMap[Center[0], Center[1]];
     }
 
     double AveragePointsCenter(int Len, int[] centerIndex)
@@ -179,8 +180,8 @@ public class TerMat
         return point[index] + len;
     }
 
-    public int GetSeed()
+    public int getSL()
     {
-        return seed;
+        return sideLenIndex;
     }
 }

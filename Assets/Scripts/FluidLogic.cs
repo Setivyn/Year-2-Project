@@ -25,7 +25,7 @@ struct GridCube //whole grid structure, each index is smaller cubes of size (int
 
 public class FluidLogic : MonoBehaviour
 {
-    [SerializeField] TerrainVisualiseLogic meshObject;
+    LinkBehaviour linkLogic;
     [SerializeField] [Range(1,5)]int divSizeI = 3;
     [SerializeField] [Range(0f, 1f)] double diffI;
     [SerializeField] [Range(0f, 1f)] double viscI;
@@ -42,6 +42,7 @@ public class FluidLogic : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        linkLogic = FindObjectOfType<LinkBehaviour>();
     }
 
     // Update is called once per frame
@@ -52,7 +53,7 @@ public class FluidLogic : MonoBehaviour
 
     public void startStop(int iterations)
     {
-        if (runSimulation) { runSimulation = false; meshObject.SetColours(cubes.density, cubes.count); }
+        if (runSimulation) { runSimulation = false; linkLogic.setColours(cubes.density, cubes.count); }
         else { runSimulation = true; simulateLoop(iterations); }
             
     }
@@ -62,7 +63,7 @@ public class FluidLogic : MonoBehaviour
         cubes = DefineCube(divSizeI, diffI, viscI, dtI, meshSize);
     }
 
-    public void simulateLoop(int iterations)
+    void simulateLoop(int iterations)
     {
         if (runSimulation){
             for(int i = 0; i < 100; i ++)
@@ -113,7 +114,9 @@ public class FluidLogic : MonoBehaviour
         double[,,] dens = cube.density;
         double[,,] d0 = cube.d0;
 
-        if(addVBool)
+        //} Passer Values, allows transfer of struct properties without annoying compiler
+
+        if (addVBool)
         {
             for (int j = 1; j < cube.count - 1; j++)
             {
@@ -126,28 +129,26 @@ public class FluidLogic : MonoBehaviour
             }
         }
 
-        //} Passer Values, allows transfer of struct properties without annoying compiler
-
         //{
-        //diffuse(1, ref Vx0, ref Vx, cube.diff, cube.dt, iterations, cube.count);
-       // diffuse(2, ref Vy0, ref Vy, cube.diff, cube.dt, iterations, cube.count);
-       // diffuse(3, ref Vz0, ref Vz, cube.diff, cube.dt, iterations, cube.count);
+        diffuse(1, ref Vx0, ref Vx, cube.diff, cube.dt, iterations, cube.count);
+        diffuse(2, ref Vy0, ref Vy, cube.diff, cube.dt, iterations, cube.count);
+        diffuse(3, ref Vz0, ref Vz, cube.diff, cube.dt, iterations, cube.count);
 
-        //project(ref Vx0, ref Vy0, ref Vz0, ref Vx, ref Vy, iterations, cube.count);
+        project(ref Vx0, ref Vy0, ref Vz0, ref Vx, ref Vy, iterations, cube.count);
 
-        /*advect(1, ref Vx, Vx0, Vx, Vy, Vz, cube.dt, cube.count);
+        advect(1, ref Vx, Vx0, Vx, Vy, Vz, cube.dt, cube.count);
         advect(2, ref Vy, Vy0, Vx, Vy, Vz, cube.dt, cube.count);
-        advect(3, ref Vz, Vz0, Vx, Vy, Vz, cube.dt, cube.count);*/
+        advect(3, ref Vz, Vz0, Vx, Vy, Vz, cube.dt, cube.count);
 
-        //project(ref Vx, ref Vy, ref Vz, ref Vx0, ref Vy0, iterations, cube.count);
+        project(ref Vx, ref Vy, ref Vz, ref Vx0, ref Vy0, iterations, cube.count);
         //} Move Velocities
 
         //{
         //Debug.Log("d: " + dens[1, cube.count - 2, 1]);
         diffuse(0, ref d0, ref dens, cube.visc, cube.dt, iterations, cube.count);
-        Debug.Log("2: " + dens[1, cube.count - 2, 1]);
+        //Debug.Log("2: " + dens[1, cube.count - 2, 1]);
         advect(1, ref dens, d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        Debug.Log("3: " + dens[1, cube.count - 2, 1]);
+        //Debug.Log("3: " + dens[1, cube.count - 2, 1]);
         //} Move Dye
 
         //{
@@ -191,8 +192,8 @@ public class FluidLogic : MonoBehaviour
             }
 
         }
-        resetBounds(0, ref div, N);
-        resetBounds(0, ref p, N);
+
+        resetBounds(0, ref div, N); resetBounds(0, ref p, N);
         linearSolve(0, ref p, div, 1, 6, iter, N);
 
         for (int k = 1; k < N - 1; k++)
@@ -202,18 +203,17 @@ public class FluidLogic : MonoBehaviour
                 for (int i = 1; i < N - 1; i++)
                 {
                     Vx1[i, j, k] -= 0.5f * (p[i + 1, j, k]
-                                           +p[i - 1, j, k]) * N;
+                                           -p[i - 1, j, k]) * N;
                     Vy1[i, j, k] -= 0.5f * (p[i, j + 1, k]
-                                           +p[i, j - 1, k]) * N;
+                                           -p[i, j - 1, k]) * N;
                     Vz1[i, j, k] -= 0.5f * (p[i, j, k + 1]
-                                           +p[i, j, k - 1]) * N;
+                                           -p[i, j, k - 1]) * N;
                 }
             }
 
         }
-        resetBounds(1, ref Vx1, N);
-        resetBounds(2, ref Vy1, N);
-        resetBounds(3, ref Vz1, N);
+
+        resetBounds(1, ref Vx1, N); resetBounds(2, ref Vy1, N); resetBounds(3, ref Vz1, N);
 
     }
 
@@ -228,11 +228,11 @@ public class FluidLogic : MonoBehaviour
 
         int i, j, k;
 
-        for(k = 1; k < N -1; k++)
+        for(k = 1; k < N - 2; k++)
         {
-            for (j = 1; j < N - 1; j++)
+            for (j = 1; j < N - 2; j++)
             {
-                for (i = 1; i < N - 1; i++)
+                for (i = 1; i < N - 2; i++)
                 {
 
                     x = i - (dt0 * Vx[i, j, k]);
@@ -248,11 +248,19 @@ public class FluidLogic : MonoBehaviour
                     calcCoeffAdv(k0, out u0, out u1, z);
 
                     int i0I = (int)i0;
+                    i0I = i0I > N - 1 ? N - 1 : i0I;
                     int i1I = (int)i1;
+                    i1I = i1I > N - 1 ? N - 1 : i1I;
                     int j0I = (int)j0;
+                    j0I = j0I > N - 1 ? N - 1 : j0I;
                     int j1I = (int)j1;
+                    j1I = j1I > N - 1 ? N - 1 : j1I;
                     int k0I = (int)k0;
+                    k0I = k0I > N - 1 ? N - 1 : k0I;
                     int k1I = (int)k1;
+                    k1I = k1I > N - 1 ? N - 1 : k1I;
+
+                    
 
                     Vq[i, j, k] = (
                         s0 * (t0 * (u0 * Vq0[i0I, j0I, k0I]
@@ -267,7 +275,6 @@ public class FluidLogic : MonoBehaviour
                 }
             }
         }
-
         resetBounds(d, ref Vq, N);
     }
 
@@ -288,7 +295,6 @@ public class FluidLogic : MonoBehaviour
 
     void linearSolve(int dimension, ref double[,,] q, double[,,] q0, double a, double c, int iterations, int N)
     {
-        //Debug.Log(q[20, 41, 20]);
         double cRecip = 1 / c;
         for(int m = 0; m < iterations; m++)
         {
@@ -308,37 +314,26 @@ public class FluidLogic : MonoBehaviour
                         
                     }
                 }
-                /*Debug.Log("Orig=" + q0[20, j, 20]);
-                Debug.Log("X:" + 20 + " Y:" + j + " Z:" + 20 + " Val:" + q[20, j, 20]);
-                Debug.Log("A=" + a + " cRecip=" + cRecip + "Sum Adj. = " + (q[20 + 1, j, 20] +
-                                   q[20 - 1, j, 20] +
-                                   q[20, j + 1, 20] +
-                                   q[20, j - 1, 20] +
-                                   q[20, j, 20 + 1] +
-                                   q[20, j, 20 - 1]));*/
             }
-            
-            //Debug.Log("q: " + q[1, N - 2, 1]);
-            //resetBounds(b, ref q, N);
-            //Debug.Log("q1: " + q[1, N - 2, 1]);
+            resetBounds(dimension, ref q, N);
         }
     }
 
-    void resetBounds(double dimension, ref double[,,] q, int N)
+    void resetBounds(int dimension, ref double[,,] q, int N)
     {
-        int y = 1;
-        for(int j = 1; j < N - 1; j ++)
+        
+        for(int j = 1; j < N - 2; j ++)
         {
-            for(int i = 1; i < N - 1; i++)
+            for(int i = 1; i < N - 2; i++)
             {
                 q[i, j, 0    ] = dimension == 3 ? -q[i, j, 1    ] : q[i, j, 1    ];
                 q[i, j, N - 1] = dimension == 3 ? -q[i, j, N - 2] : q[i, j, N - 2];
             }
         }
 
-        for (int k = 1; k < N - 1; k++)
+        for (int k = 1; k < N - 2; k++)
         {
-            for (int i = 1; i < N - 1; i++)
+            for (int i = 1; i < N - 2; i++)
             {
                 q[i, 0, k    ] = dimension == 2 ? -q[i, 1, k    ] : q[i, 1, k    ];
                 q[i, N - 1, k] = dimension == 2 ? -q[i, N - 2, k] : q[i, N - 2, k];
@@ -346,22 +341,24 @@ public class FluidLogic : MonoBehaviour
             }
         }
 
-        for (int k = 1; k < N - 1; k++)
+        for (int k = 1; k < N - 2; k++)
         {
-            for (int j = 1; j < N - 1; j++)
+            for (int j = 1; j < N - 2; j++)
             {
                 q[0, j, k    ] = dimension == 1 ? -q[1, j, k    ] : q[1, j, k    ];
                 q[N - 1, j, k] = dimension == 1 ? -q[N - 2, j, k] : q[N - 2, j, k];
             }
         }
 
-        for (int k = 1; k < N - 1; k++)
+        for (int k = 1; k < N - 2; k++)
         {
-            for (int i = 1; i < N - 1; i++)
+            for (int i = 1; i < N - 2; i++)
             {
-                //get terrain at point either side, in dimension. follow downward trends, dont touch y.
-                //if signs match between qV and terrain gradient direction, flip vel. else do nothin
-                //weighted average of velocity and terrain gradient
+                int y = (int)linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size;
+                //Debug.Log("y: " + y + "@ x: " + i + ", z: " + k);
+                q[i, y, k] = dimension == 1 && directionCheck(q[i, y, k], i, k, dimension) ? q[i + 1, y, k] : -q[i + 1, y, k];
+                q[i, y, k] = dimension == 3 && directionCheck(q[i, y, k], i, k, dimension) ? q[i, y, k + 1] : -q[i, y, k + 1];
+                //weighted average of velocity and terrain gradient -> needs implementing
             }
         }
 
@@ -391,6 +388,15 @@ public class FluidLogic : MonoBehaviour
                                         + q[N - 1, N - 1, N - 2]);
     }
 
+    private bool directionCheck(double qAtIK, int i, int k, int dimension)
+    {
+        int iMat = i * cubes.size;
+        int kMat = k * cubes.size;
+        double matAtIk = dimension == 1 ? linkLogic.matAtXY(iMat - 1, kMat) - linkLogic.matAtXY(iMat + 1, kMat) : linkLogic.matAtXY(iMat, kMat - 1) - linkLogic.matAtXY(iMat, kMat + 1);
+        bool boolOut = (qAtIK < 0 && matAtIk < 0 ) | (qAtIK >= 0 && matAtIk >= 0) ? true : false;
+        return boolOut;
+    }
+
     public void addDToCube(int x, int y, int z, double amount)
     {
         cubes.density[x,y,z] += amount;
@@ -406,7 +412,10 @@ public class FluidLogic : MonoBehaviour
         Iy = y;
     }
 
-    
+    public void ceaseVelAdd()
+    {
+        addVBool = false;
+    }
 
     public int getCubeCount()
     {

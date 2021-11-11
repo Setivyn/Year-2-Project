@@ -9,9 +9,7 @@ using System.Linq;
 
 public class TerrainVisualiseLogic : MonoBehaviour
 {
-    TerMat Matrix;
-    [SerializeField] FluidLogic CFDLogic;
-    [SerializeField] UIBehaviour UILogic;
+    LinkBehaviour linkLogic;
     [SerializeField] Material meshMater;
     [SerializeField][Range(0.0f, 2f)] double Roughness;
     [SerializeField][Range(0.0f, 0.8f)] double Steepness;
@@ -19,7 +17,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
     int sideLength;
     double[] modifiers;
     int cubeN;
-
     int sideLengthT;
     int seed;
 
@@ -33,7 +30,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     void Start()
     {
-        UILogic = FindObjectOfType<UIBehaviour>();
+        linkLogic = FindObjectOfType<LinkBehaviour>();
 
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
@@ -44,12 +41,13 @@ public class TerrainVisualiseLogic : MonoBehaviour
         modifiers = SetModifiers(Roughness, Steepness);
 
         //Generate Matrix and assign to mesh filter
-        Matrix = new TerMat(sideLengthT, seed, modifiers);
-        MF.mesh = CreateMesh(Matrix, sideLength);
+        linkLogic.setMat(sideLengthT, seed, modifiers);
+
+        MF.mesh = CreateMesh(sideLength);
 
         initSimulation();
 
-        UILogic.setCamera();
+        linkLogic.setCamera();
     }
 
     // Update is called once per frame
@@ -64,13 +62,13 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return output;
     }
 
-    Mesh CreateMesh(TerMat input, int sideLen)
+    Mesh CreateMesh(int sideLen)
     {
         Mesh outMesh = new Mesh();
 
         //Assign New Vertices & Set mesh
         Vector3[] newVertices;
-        newVertices = SetVertices(input, sideLen * sideLen, sideLen);
+        newVertices = SetVertices(sideLen * sideLen, sideLen);
         outMesh.vertices = newVertices;
 
         //Find and Set triangles
@@ -86,10 +84,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return outMesh;
     }
 
-    public double matAtXY(int x, int y)
-    {
-        return Matrix.GetMatrixAtPoint(x, y);
-    }
+    
     double findMax(Vector3[] newVertices)
     {
         double max = 0;
@@ -173,7 +168,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return Triangles;
     }
 
-    Vector3[] SetVertices(TerMat input, int sideLenTo2, int sideLen)
+    Vector3[] SetVertices(int sideLenTo2, int sideLen)
     {
         //Declare and initialise Vector array
         Vector3[] outVectors = new Vector3[sideLenTo2 + 4 * (sideLen)]; //Vector Array for all points on matrix and the bottom edge pieces for completer mesh.
@@ -186,7 +181,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
             for (int j = 0; j < sideLen; j++)
             {
                 inputVector.x = i;
-                inputVector.y = (float)input.GetMatrixAtPoint(i, j);
+                inputVector.y = (float)linkLogic.matAtXY(i, j);
                 inputVector.z = j;
                 outVectors[pointer] = inputVector;
                 pointer++;
@@ -235,69 +230,43 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return outVectors;
     }
 
-    public int getSL()
-    {
-        return sideLength;
-    }
 
     //FLUID INTERFACE
 
     void initSimulation()
     {
-        CFDLogic.initSimulation(sideLength);
-        cubeN = CFDLogic.getCubeCount();
+        linkLogic.initSim(sideLength);
+        cubeN = linkLogic.getFluidCubeCount();
         for (int j = 1; j < cubeN - 1; j++)
         {
             for (int i = 1; i < cubeN - 1; i++)
             {
-                CFDLogic.addDToCube(i, cubeN - 2, j, 100);
+                linkLogic.addDensToFluid(i, cubeN - 2, j, 100);
             }
         }
-        Debug.Log("D added");
         
     }
 
     public void changeSimState(int iterations)
     {
-        CFDLogic.addVToCube(cubeN - 1, 0, (-sideLength * Math.Pow(Steepness, 2)), 0);
-        CFDLogic.startStop(iterations);
+        linkLogic.addVelToFluid(cubeN - 1, 0, (-sideLength * Math.Pow(1 + Steepness, 3)), 0);
+        linkLogic.startStopSim(iterations);
 
     }
 
-
-    public double[] findValues(ref double maxVal, TerMat matrix)
-    {
-        int cubeN = CFDLogic.getCubeCount();
-        int cubeN2 = cubeN ^ 2;
-        double[,,] densities = recieveD();
-        int matY;
-
-        double[] output = new double[cubeN2];
-        for (int i = 0; i < sideLength; i++)
-        {
-            for(int j = 0; j < sideLength; j++)
-            {
-                matY = (int)Math.Floor(matrix.GetMatrixAtPoint(i, j));
-                output[(i * sideLength) + j] = densities[i, matY, j];
-            }
-        }
-        maxVal = output.Max();
-
-        return output;
-    }
 
     public void SetColours(double[,,] values, int N)
     {
         double[] values1D = new double[(sideLength * sideLength) + (4 * sideLength)];
         int pointer = 0;
-        int size = CFDLogic.getCubeSize();
+        int size = linkLogic.getFluidCubeSize();
         for(int k = 0; k < N; k++)
         {
             for(int j = 0; j < N; j++)
             {
                 for (int i = 0; i < N; i++)
                 {
-                    if (j * size == Math.Ceiling(Matrix.GetMatrixAtPoint(i * size, k * size))) 
+                    if (j * size == Math.Ceiling(linkLogic.matAtXY(i * size, k * size))) 
                     { 
                         
                         values1D[pointer] = values[i, j, k];
@@ -334,7 +303,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     double[,,] recieveD()
     {
-        int cubeN = CFDLogic.getCubeCount();
+        int cubeN = linkLogic.getFluidCubeCount();
 
         double[,,] densOut = new double[cubeN, cubeN, cubeN];
 
@@ -345,12 +314,17 @@ public class TerrainVisualiseLogic : MonoBehaviour
             {
                 for (int i = 0; i < cubeN; i++)
                 {
-                    densOut[i, j, k] = CFDLogic.getDensityAtCube(i, j, k);
+                    densOut[i, j, k] = linkLogic.getDensAtPoint(i, j, k);
                 }
             }
         }
 
         return densOut;
+    }
+
+    public int getSeed()
+    {
+        return seed;
     }
 }
 
