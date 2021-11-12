@@ -35,9 +35,9 @@ public class FluidLogic : MonoBehaviour
 
     bool runSimulation = false;
 
-    double IVx, IVy, IVz;
-    bool addVBool;
-    int Iy;
+    double IVx, IVy, IVz, Id;
+    bool addVBool, addDBool;
+    int Iy, Iyd;
 
     // Start is called before the first frame update
     void Start()
@@ -125,6 +125,17 @@ public class FluidLogic : MonoBehaviour
                     Vx[i, Iy, j] += IVx;
                     Vy[i, Iy, j] += IVy;
                     Vz[i, Iy, j] += IVz;
+                }
+            }
+        }
+
+        if (addDBool)
+        {
+            for (int j = 1; j < cube.count - 1; j++)
+            {
+                for (int i = 1; i < cube.count - 1; i++)
+                {
+                    dens[i,Iyd,j] += Id;
                 }
             }
         }
@@ -217,7 +228,7 @@ public class FluidLogic : MonoBehaviour
 
     }
 
-    void advect(int d, ref double[,,] Vq, double[,,] Vq0, double[,,] Vx, double[,,] Vy, double[,,] Vz, double dt, int N)
+    void advect(int d, ref double[,,] q, double[,,] q0, double[,,] Vx, double[,,] Vy, double[,,] Vz, double dt, int N)
     {
         double i0, i1, j0, j1, k0, k1;
 
@@ -262,20 +273,20 @@ public class FluidLogic : MonoBehaviour
 
                     
 
-                    Vq[i, j, k] = (
-                        s0 * (t0 * (u0 * Vq0[i0I, j0I, k0I]
-                                   + u1 * Vq0[i0I, j0I, k1I])
-                             + (t1 * (u0 * Vq0[i0I, j1I, k0I]
-                                   + u1 * Vq0[i0I, j1I, k1I])))
-                       + s1 * (t0 * (u0 * Vq0[i1I, j0I, k0I]
-                                   + u1 * Vq0[i1I, j0I, k1I])
-                             + (t1 * (u0 * Vq0[i1I, j1I, k0I]
-                                   + u1 * Vq0[i1I, j1I, k1I])))
+                    q[i, j, k] = (
+                        s0 * (t0 * (u0 * q0[i0I, j0I, k0I]
+                                   + u1 * q0[i0I, j0I, k1I])
+                             + (t1 * (u0 * q0[i0I, j1I, k0I]
+                                   + u1 * q0[i0I, j1I, k1I])))
+                       + s1 * (t0 * (u0 * q0[i1I, j0I, k0I]
+                                   + u1 * q0[i1I, j0I, k1I])
+                             + (t1 * (u0 * q0[i1I, j1I, k0I]
+                                   + u1 * q0[i1I, j1I, k1I])))
                         );
                 }
             }
         }
-        resetBounds(d, ref Vq, N);
+        resetBounds(d, ref q, N);
     }
 
     private static void calcCoeffAdv(double i0, out double s0, out double s1, double x)
@@ -354,13 +365,15 @@ public class FluidLogic : MonoBehaviour
         {
             for (int i = 1; i < N - 2; i++)
             {
-                int y = (int)linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size;
+                int y = ((int)linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size) - 1;
                 //Debug.Log("y: " + y + "@ x: " + i + ", z: " + k);
                 q[i, y, k] = dimension == 1 && directionCheck(q[i, y, k], i, k, dimension) ? q[i + 1, y, k] : -q[i + 1, y, k];
                 q[i, y, k] = dimension == 3 && directionCheck(q[i, y, k], i, k, dimension) ? q[i, y, k + 1] : -q[i, y, k + 1];
                 //weighted average of velocity and terrain gradient -> needs implementing
             }
         }
+        int ytest = ((int)linkLogic.matAtXY(5 * cubes.size, 5 * cubes.size) / cubes.size) - 1;
+        //if (dimension == 1) { Debug.Log(directionCheck(q[5, ytest, 5], 5, 5, dimension) + " mat diff: " + (linkLogic.matAtXY((5 * cubes.size) - 1, 5 * cubes.size) - linkLogic.matAtXY((5 * cubes.size) + 1, 5 * cubes.size))); }
 
         q[0, 0, 0]             = 0.33f * (q[1, 0, 0]
                                         + q[0, 1, 0]
@@ -397,9 +410,11 @@ public class FluidLogic : MonoBehaviour
         return boolOut;
     }
 
-    public void addDToCube(int x, int y, int z, double amount)
+    public void addDToCube(int y, double amount)
     {
-        cubes.density[x,y,z] += amount;
+        Iyd = y;
+        addDBool = true;
+        Id = amount;
     }
 
     public void addVToCube(int y, double Vx1, double Vy1, double Vz1)

@@ -46,9 +46,9 @@ public class LinkBehaviour : MonoBehaviour
         fluidLogic.initSimulation(meshSize);
     }
 
-    public void addDensToFluid(int x, int y, int z, double amount)
+    public void addDensToFluid(int y, double amount)
     {
-        fluidLogic.addDToCube(x, y, z, amount);
+        fluidLogic.addDToCube(y, amount);
     }
 
     public void addVelToFluid(int y, double amountX, double amountY, double amountZ)

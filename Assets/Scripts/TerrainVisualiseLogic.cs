@@ -237,19 +237,13 @@ public class TerrainVisualiseLogic : MonoBehaviour
     {
         linkLogic.initSim(sideLength);
         cubeN = linkLogic.getFluidCubeCount();
-        for (int j = 1; j < cubeN - 1; j++)
-        {
-            for (int i = 1; i < cubeN - 1; i++)
-            {
-                linkLogic.addDensToFluid(i, cubeN - 2, j, 100);
-            }
-        }
+        linkLogic.addDensToFluid(cubeN - 2, 100);
         
     }
 
     public void changeSimState(int iterations)
     {
-        linkLogic.addVelToFluid(cubeN - 1, 0, (-sideLength * Math.Pow(1 + Steepness, 3)), 0);
+        linkLogic.addVelToFluid(cubeN - 1, 0, (sideLength * Math.Pow(1 + Steepness, 3)), 0);
         linkLogic.startStopSim(iterations);
 
     }
@@ -260,20 +254,32 @@ public class TerrainVisualiseLogic : MonoBehaviour
         double[] values1D = new double[(sideLength * sideLength) + (4 * sideLength)];
         int pointer = 0;
         int size = linkLogic.getFluidCubeSize();
+        int x, y, j;
+        double val;
         for(int k = 0; k < N; k++)
         {
-            for(int j = 0; j < N; j++)
+            for (int i = 0; i < N; i++)
             {
-                for (int i = 0; i < N; i++)
+                x = i * size;
+                y = k * size;
+
+                j = (int)linkLogic.matAtXY(x, y) / size;
+
+                val = values[i, j, k];
+
+                for(i = 0; i < size; i ++)
                 {
-                    if (j * size == Math.Ceiling(linkLogic.matAtXY(i * size, k * size))) 
-                    { 
-                        
-                        values1D[pointer] = values[i, j, k];
-                        pointer += 1;
+                    for(j = 0; j < size; j ++)
+                    {
+                        values1D[(i * sideLength) + pointer + j] = val;
                     }
+                    
                 }
+                
+
+                pointer += size;
             }
+            pointer += sideLength * (size - 1);
         }
 
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
