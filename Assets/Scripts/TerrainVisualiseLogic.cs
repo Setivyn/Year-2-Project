@@ -24,7 +24,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
     {
         sideLengthT = (inputLen * 2) + 3;
         //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
-        seed = Guid.NewGuid().GetHashCode();
+        //seed = Guid.NewGuid().GetHashCode();
+        seed = 200000;
         sideLength = Convert.ToInt32(Math.Pow(2, sideLengthT)) + 1;
     }
 
@@ -267,19 +268,18 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
                 val = values[i, j, k];
 
-                for(i = 0; i < size; i ++)
+                for (int a = 0; a < size; a ++)
                 {
-                    for(j = 0; j < size; j ++)
+                    for(int b = 0; b < size; b ++)
                     {
-                        values1D[(i * sideLength) + pointer + j] = val;
+                        values1D[(a * (sideLength-1)) + pointer + b] = val;
                     }
-                    
                 }
-                
 
                 pointer += size;
             }
             pointer += sideLength * (size - 1);
+            
         }
 
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
