@@ -257,8 +257,9 @@ public class TerrainVisualiseLogic : MonoBehaviour
         int size = linkLogic.getFluidCubeSize();
         int x, y, j;
         double val;
-        for(int k = 0; k < N; k++)
+        for (int k = 0; k < N; k++)
         {
+            
             for (int i = 0; i < N; i++)
             {
                 x = i * size;
@@ -267,30 +268,31 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 j = (int)linkLogic.matAtXY(x, y) / size;
 
                 val = values[i, j, k];
-
-                for (int a = 0; a < size; a ++)
+                for (int a = 0; a < size; a++)
                 {
-                    for(int b = 0; b < size; b ++)
+                    for (int b = 0; b < size; b++)
                     {
-                        values1D[(a * (sideLength-1)) + pointer + b] = val;
+                        values1D[(a * (sideLength - 1)) + pointer + b] = val;
                     }
                 }
+
 
                 pointer += size;
             }
             pointer += sideLength * (size - 1);
-            
         }
 
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
     }
+
+    
 
     Color32[] calcColours(double maxVal, double[] values)
     {
         Color32[] newCols = new Color32[values.Length];
         int pointer = 0;
 
-        foreach(float v in values)
+        foreach(double v in values)
         {
             newCols[pointer] = UnityEngine.Color.HSVToRGB(1 - findDiff(maxVal, v), 0.5f, 1);
             pointer += 1;
@@ -302,30 +304,10 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     private float findDiff(double maxVal, double current)
     {
-        float output = Convert.ToSingle((maxVal - current) / ((maxVal + current) / 2));
-        output = Mathf.Clamp(output, 0.15f, 1);
+        double diff = maxVal < current ? current - maxVal : maxVal - current;
+        float output = Convert.ToSingle(diff / maxVal);
+        output = Mathf.Clamp(output, 0.15f, 1f);
         return output;
-    }
-
-    double[,,] recieveD()
-    {
-        int cubeN = linkLogic.getFluidCubeCount();
-
-        double[,,] densOut = new double[cubeN, cubeN, cubeN];
-
-
-        for (int k = 0; k < cubeN; k++)
-        {
-            for (int j = 0; j < cubeN; j++)
-            {
-                for (int i = 0; i < cubeN; i++)
-                {
-                    densOut[i, j, k] = linkLogic.getDensAtPoint(i, j, k);
-                }
-            }
-        }
-
-        return densOut;
     }
 
     public int getSeed()
