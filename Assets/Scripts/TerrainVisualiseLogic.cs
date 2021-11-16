@@ -255,31 +255,24 @@ public class TerrainVisualiseLogic : MonoBehaviour
         double[] values1D = new double[(sideLength * sideLength) + (4 * sideLength)];
         int pointer = 0;
         int size = linkLogic.getFluidCubeSize();
-        int x, y, j;
+        int x, y, z;
         double val;
-        for (int k = 0; k < N; k++)
+        for (int k = 0; k < sideLength; k++)
         {
             
-            for (int i = 0; i < N; i++)
+            for (int i = 0; i < sideLength; i++)
             {
-                x = i * size;
-                y = k * size;
+                x = (int)(i / size);
+                z = (int)(k / size);
 
-                j = (int)linkLogic.matAtXY(x, y) / size;
+                y = (int)linkLogic.matAtXY(i, k) / size;
 
-                val = values[i, j, k];
-                for (int a = 0; a < size; a++)
-                {
-                    for (int b = 0; b < size; b++)
-                    {
-                        values1D[(a * (sideLength - 1)) + pointer + b] = val;
-                    }
-                }
+                val = values[x, y, z];
 
+                values1D[pointer] = val;
 
-                pointer += size;
+                pointer += 1;
             }
-            pointer += sideLength * (size - 1);
         }
 
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
