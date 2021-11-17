@@ -24,8 +24,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
     {
         sideLengthT = (inputLen * 2) + 3;
         //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
-        //seed = Guid.NewGuid().GetHashCode();
-        seed = 200000;
+        seed = Guid.NewGuid().GetHashCode();
+        //seed = 200000;
         sideLength = Convert.ToInt32(Math.Pow(2, sideLengthT)) + 1;
     }
 

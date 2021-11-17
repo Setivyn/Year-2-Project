@@ -66,7 +66,7 @@ public class FluidLogic : MonoBehaviour
     void simulateLoop(int iterations)
     {
         if (runSimulation){
-            for(int i = 0; i < 1000; i ++)
+            for(int i = 0; i < 100; i ++)
             {
                 EnactTimeStep(cubes, iterations);
                 //System.Threading.Thread.Sleep((int)Math.Floor(cubes.dt) + 1);
@@ -369,9 +369,11 @@ public class FluidLogic : MonoBehaviour
         {
             for (int i = 1; i < N - 1; i++)
             {
-                int y = ((int)linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size);
-                q[i, y, k] = dimension == 1 && directionCheck(q[i, y, k], i, k, dimension) ? q[i + 1, y, k] : -q[i + 1, y, k];
-                q[i, y, k] = dimension == 3 && directionCheck(q[i, y, k], i, k, dimension) ? q[i, y, k + 1] : -q[i, y, k + 1];
+                int y = ((int)linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size) - 1;
+                int dir = 0;
+                q[i, y, k] = dimension == 1 && directionCheck(q[i, y, k], i, k, dimension, out dir) ? q[i + dir, y, k] : -q[i + dir, y, k];
+                q[i, y, k] = dimension == 2 ? -q[i, y + 1, k] : q[i, y, k];
+                q[i, y, k] = dimension == 3 && directionCheck(q[i, y, k], i, k, dimension, out dir) ? q[i, y, k + dir] : -q[i, y, k + dir];
             }
         }
         
@@ -401,12 +403,13 @@ public class FluidLogic : MonoBehaviour
                                         + q[N - 1, N - 1, N - 2]);
     }
 
-    private bool directionCheck(double qAtIK, int i, int k, int dimension)
+    private bool directionCheck(double qAtIK, int i, int k, int dimension, out int direction)
     {
         int iMat = i * cubes.size;
         int kMat = k * cubes.size;
         double matAtIk = dimension == 1 ? linkLogic.matAtXY(iMat - 1, kMat) - linkLogic.matAtXY(iMat + 1, kMat) : linkLogic.matAtXY(iMat, kMat - 1) - linkLogic.matAtXY(iMat, kMat + 1);
         bool boolOut = (qAtIK < 0 && matAtIk < 0 ) | (qAtIK >= 0 && matAtIk >= 0) ? true : false;
+        direction = boolOut == true ?(int)( matAtIk / Math.Abs(matAtIk)) :(int)( -matAtIk / Math.Abs(matAtIk));
         return boolOut;
     }
 
