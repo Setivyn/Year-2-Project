@@ -297,8 +297,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     private float findDiff(double maxVal, double current)
     {
-        double diff = maxVal < current ? current - maxVal : maxVal - current;
-        float output = Convert.ToSingle(diff / maxVal);
+        double diff = maxVal - current;
+        float output = Convert.ToSingle(Math.Abs(diff) / maxVal);
         output = Mathf.Clamp(output, 0.15f, 1f);
         return output;
     }
