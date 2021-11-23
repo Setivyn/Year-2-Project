@@ -35,6 +35,7 @@ public class LinkBehaviour : MonoBehaviour
         return visLogic.getSeed();
     }
 
+
     //
     //fluidLogic links
     public void startStopSim(int iterations)
@@ -64,6 +65,14 @@ public class LinkBehaviour : MonoBehaviour
 
     public double getDensAtPoint(int x, int y, int z)
     {
+        return fluidLogic.getDensityAtCube(x, y, z);
+    }
+    public double getDensAtPoint(Vector3 point)
+    {
+        int size = getFluidCubeSize();
+        int x = (int)(point.x / size);
+        int y = (int)(point.y / size);
+        int z = (int)(point.z / size);
         return fluidLogic.getDensityAtCube(x, y, z);
     }
 

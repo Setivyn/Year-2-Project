@@ -36,6 +36,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
         var MR = gameObject.AddComponent<MeshRenderer>();
+        
+        
         MR.sharedMaterial = meshMater;
 
         //Set up Modifiers for Terrain
@@ -46,9 +48,13 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         MF.mesh = CreateMesh(sideLength);
 
+        var MC = gameObject.AddComponent<MeshCollider>().sharedMesh = MF.mesh;
+
         initSimulation();
 
         linkLogic.setCamera();
+
+        
     }
 
     // Update is called once per frame
@@ -307,5 +313,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
     {
         return seed;
     }
+
 }
 
