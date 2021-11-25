@@ -25,8 +25,7 @@ public class TerMat
         heightMod = modifiers[1];
 
         //Initialise first grid values, as these are set differently.
-        startCent[0] = sideLenIndex / 2;
-        startCent[1] = startCent[0];
+        startCent[0] = startCent[1] = sideLenIndex / 2;
         Centers.Add(startCent);
         SetCorners(Centers[0], sideLenIndex);
         altitudeMap[Centers[0][0], Centers[0][1]] = AveragePointsCenter(sideLenIndex, Centers[0]);

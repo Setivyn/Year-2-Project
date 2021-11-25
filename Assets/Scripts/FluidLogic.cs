@@ -25,7 +25,7 @@ struct GridCube //whole grid structure, each index is smaller cubes of size (int
 
 public class FluidLogic : MonoBehaviour
 {
-    LinkBehaviour linkLogic;
+    public LinkBehaviour linkLogic;
     [SerializeField] [Range(1,5)]int divSizeI = 3;
     [SerializeField] [Range(0f, 1f)] double diffI;
     [SerializeField] [Range(0f, 1f)] double viscI;
@@ -69,7 +69,6 @@ public class FluidLogic : MonoBehaviour
             for(int i = 0; i < 100; i ++)
             {
                 EnactTimeStep(cubes, iterations);
-                //System.Threading.Thread.Sleep((int)Math.Floor(cubes.dt) + 1);
             }
             startStop(iterations);
         }
@@ -117,6 +116,7 @@ public class FluidLogic : MonoBehaviour
 
         //} Passer Values, allows transfer of struct properties without annoying compiler
 
+        //{
         if (addVBool)
         {
             for (int j = 1; j < cube.count - 1; j++)
@@ -140,7 +140,7 @@ public class FluidLogic : MonoBehaviour
                 }
             }
         }
-
+        //} Sources Implementation, only adds as a constant plane to specific y coord, as this is most accurate
         //{
         diffuse(1, ref Vx0, ref Vx, cube.visc, cube.dt, iterations, cube.count);
         diffuse(2, ref Vy0, ref Vy, cube.visc, cube.dt, iterations, cube.count);
@@ -156,11 +156,8 @@ public class FluidLogic : MonoBehaviour
         //} Move Velocities
 
         //{
-        //Debug.Log("d: " + dens[1, cube.count - 2, 1]);
         diffuse(0, ref d0, ref dens, cube.diff, cube.dt, iterations, cube.count);
-        //Debug.Log("2: " + dens[1, cube.count - 2, 1]);
         advect(0, ref dens, d0, cube.Vx, cube.Vy, cube.Vz, cube.dt, cube.count);
-        //Debug.Log("3: " + dens[1, cube.count - 2, 1]);
         //} Move Dye
 
         //{
@@ -235,7 +232,7 @@ public class FluidLogic : MonoBehaviour
 
         double dt0;
         dt0 = dt * N;
-
+        
         double s0, s1, t0, t1, u0, u1, x, y, z;
 
         int i, j, k;
@@ -251,9 +248,9 @@ public class FluidLogic : MonoBehaviour
                     y = j - (dt0 * Vy[i, j, k]);
                     z = k - (dt0 * Vz[i, j, k]);
 
-                    clampAdv(N, out i0, out i1, ref x);
-                    clampAdv(N, out j0, out j1, ref y);
-                    clampAdv(N, out k0, out k1, ref z);
+                    clampAdv(N, out i0, out i1, ref x, 1, i, k);
+                    clampAdv(N, out j0, out j1, ref y, 2, i, k);
+                    clampAdv(N, out k0, out k1, ref z, 3, i, k);
 
                     calcCoeffAdv(i0, out s0, out s1, x);
                     calcCoeffAdv(j0, out t0, out t1, y);
@@ -282,19 +279,31 @@ public class FluidLogic : MonoBehaviour
         resetBounds(d, ref q, N);
     }
 
-    private static void calcCoeffAdv(double index0, out double coeff0, out double coeff1, double q)
+    private void calcCoeffAdv(double index0, out double coeff0, out double coeff1, double q)
     {
         coeff1 = q - index0;
         coeff0 = 1 - coeff1;
     }
 
-    private static double clampAdv(int N, out double coeff0, out double coeff1, ref double q)
+    private double clampAdv(int N, out double coeff0, out double coeff1, ref double q, int dimension, int x, int y)
     {
-        if (q < 0.5) { q = 0.5; }
-        if (q > N + 0.5) { q = N + 0.5; }
-        coeff0 = (int)q;
-        coeff1 = coeff0 + 1;
-        return q;
+        if (dimension == 2)
+        {
+            int ymin = (int)linkLogic.matAtXY(x * cubes.size, y * cubes.size) / cubes.size;
+            if (q < ymin + 0.5) { q = ymin + 0.5; }
+            if (q > N + 0.5) { q = N + 0.5; }
+            coeff0 = (int)q;
+            coeff1 = coeff0 + 1;
+            return q;
+        }
+        else
+        {
+            if (q < 0.5) { q = 0.5; }
+            if (q > N + 0.5) { q = N + 0.5; }
+            coeff0 = (int)q;
+            coeff1 = coeff0 + 1;
+            return q;
+        }
     }
 
     void linearSolve(int dimension, ref double[,,] q, double[,,] q0, double a, double c, int iterations, int N)
@@ -385,7 +394,7 @@ public class FluidLogic : MonoBehaviour
         {
             for (int i = 1; i < N - 1; i++)
             {
-                int y = ((int)Math.Round(linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size)) - 1;
+                int y = ((int)(linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size)) - 1;
                 int dir = 0;
                 bool direcBool = directionCheck(q[i, y, k], i, k, dimension, ref dir);
                 q[i, y, k] = dimension == 1 && direcBool? -q[i + dir, y + 1, k] : q[i + dir, y + 1, k];
