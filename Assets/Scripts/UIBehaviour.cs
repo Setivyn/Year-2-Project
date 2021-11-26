@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using System;
 
 public class UIBehaviour : MonoBehaviour
 {
@@ -13,6 +14,24 @@ public class UIBehaviour : MonoBehaviour
     GameObject infoPanelBG, infoPanelFG, infoPanelTxt1, infoPanelTxt2;
     Image panelImageBG, panelImageFG;
     Text panelText1, panelText2;
+
+    [SerializeField] [Range(0.0f, 2f)] double Roughness;
+    [SerializeField] [Range(0.0f, 0.8f)] double Steepness;
+    [SerializeField] [Range(1, 4)] int inputLen;
+
+    double[] modifiers;
+    int sideLengthT;
+    int seed;
+
+    private void Awake()
+    {
+
+        //forces sidelength to be an odd power of 2 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
+        sideLengthT = (inputLen * 2) + 3;
+
+        //sets the Seed for the PseudoRandom Generator used in the terrain gen. Creates a random integer value with large limits.
+        seed = Guid.NewGuid().GetHashCode();
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -111,6 +130,23 @@ public class UIBehaviour : MonoBehaviour
         }
     }
 
+    public void createTerrain()
+    {
+
+        //Set up Modifiers for Terrain
+        modifiers = SetModifiers(Roughness, Steepness);
+
+        //Generate Terrain Matrix and assign to mesh filter
+        linkLogic.setMat(sideLengthT, seed, modifiers);
+    }
+
+    private double[] SetModifiers(double roughness, double steepness)
+    {
+        //Convert input modifiers to array format, for the terrain generator
+        double[] output = { roughness, steepness };
+        return output;
+    }
+
     public void setCamera()
     {
         
@@ -132,4 +168,13 @@ public class UIBehaviour : MonoBehaviour
         linkLogic.changeSim(4);
     }
 
+    public int getSeed()
+    {
+        return seed;
+    }
+
+    public double[] getModifiers()
+    {
+        return modifiers;
+    }
 }

@@ -11,40 +11,39 @@ public class TerrainVisualiseLogic : MonoBehaviour
 {
     LinkBehaviour linkLogic;
     [SerializeField] Material meshMater;
-    [SerializeField][Range(0.0f, 2f)] double Roughness;
-    [SerializeField][Range(0.0f, 0.8f)] double Steepness;
-    [SerializeField][Range(1,4)] int inputLen;
     int sideLength;
-    double[] modifiers;
     int cubeN;
-    int sideLengthT;
-    int seed;
 
     private void Awake()
     {
-        sideLengthT = (inputLen * 2) + 3;
-        //forces sidelength to be an odd power of 9 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid sim to be easily calculated
-        seed = Guid.NewGuid().GetHashCode();
-        //seed = 200000;
-        sideLength = Convert.ToInt32(Math.Pow(2, sideLengthT)) + 1;
+
+        //sets up local sidelength variable
+        sideLength = linkLogic.getSL();
     }
 
     void Start()
     {
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        
+    }
+
+
+    public void initMeshObject()
+    {
+
         linkLogic = FindObjectOfType<LinkBehaviour>();
 
         //Set up mesh Components
         var MF = gameObject.AddComponent<MeshFilter>();
         var MR = gameObject.AddComponent<MeshRenderer>();
-        
-        
+
+
         MR.sharedMaterial = meshMater;
 
-        //Set up Modifiers for Terrain
-        modifiers = SetModifiers(Roughness, Steepness);
-
-        //Generate Matrix and assign to mesh filter
-        linkLogic.setMat(sideLengthT, seed, modifiers);
 
         MF.mesh = CreateMesh(sideLength);
 
@@ -54,26 +53,15 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         linkLogic.setCamera();
 
-        
-    }
 
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
-
-    private double[] SetModifiers(double roughness, double steepness)
-    {
-        double[] output = { roughness, steepness };
-        return output;
-    }
+    
 
     Mesh CreateMesh(int sideLen)
     {
         Mesh outMesh = new Mesh();
 
-        //Assign New Vertices & Set mesh
+        //Assign New Vertices
         Vector3[] newVertices;
         newVertices = SetVertices(sideLen * sideLen, sideLen);
         outMesh.vertices = newVertices;
@@ -81,7 +69,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         //Find and Set triangles
         outMesh.triangles = SetTriangles(newVertices, sideLen);
 
-        //Standard Recalculations
+        //Ensure Unity Renderers has the additional information necessary to create the mesh in gameSpace.
         outMesh.RecalculateNormals();
         outMesh.RecalculateBounds();
         outMesh.Optimize();
@@ -91,20 +79,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return outMesh;
     }
 
-    
-    double findMax(Vector3[] newVertices)
-    {
-        double max = 0;
-        foreach (Vector3 Vertex in newVertices)
-        {
-            if (Vertex.y > max)
-            {
-                max = Vertex.y;
-            }
-        }
-        return max;
-    }
-
     int[] SetTriangles(Vector3[] newVertices, int sideLen)
 
     {
@@ -112,6 +86,8 @@ public class TerrainVisualiseLogic : MonoBehaviour
         int pointer = 0;
         int[] Triangles = new int[(6 * x * x) + (4 * 6 * x) + 6]; // (sideLen - 1) ^ 2 is number of quads, each quad has 2 triangles with 3 vertices, hence the *6
         int sideLenTo2 = sideLen * sideLen;
+        
+        //Set quads for terrain. Each is made of reference pointers into the Vertices array.
         //Top
         for (int i = 0; i < x; i++)
         {
@@ -177,11 +153,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     Vector3[] SetVertices(int sideLenTo2, int sideLen)
     {
-        //Declare and initialise Vector array
+        //Declare and initialise Vector array, for Mesh Vertices
         Vector3[] outVectors = new Vector3[sideLenTo2 + 4 * (sideLen)]; //Vector Array for all points on matrix and the bottom edge pieces for completer mesh.
         Vector3 inputVector;
 
-        //Store each value in matrix to the array
+        //Store each value in Terrain matrix to the array
         int pointer = 0;
         for (int i = 0; i < sideLen; i++)
         {
@@ -195,8 +171,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
             }
         }
 
-        //Store completer mesh edges, 
-        //CW MOVEMENT FROM 0,0
+        //"Complete" the cube, with sides and a base, so it looks like a solid object.
         pointer = sideLenTo2;
         for(int i = 0; i < sideLen; i++)
         {
@@ -242,19 +217,12 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     void initSimulation()
     {
+        //Initialises the simulation 
         linkLogic.initSim(sideLength);
         cubeN = linkLogic.getFluidCubeCount();
         linkLogic.addDensToFluid(cubeN - 2, 100);
         
     }
-
-    public void changeSimState(int iterations)
-    {
-        linkLogic.addVelToFluid(cubeN - 1, 0, (sideLength * Math.Pow(1 + Steepness, 3)), 0);
-        linkLogic.startStopSim(iterations);
-
-    }
-
 
     public void SetColours(double[,,] values, int N)
     {
@@ -268,6 +236,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
             
             for (int i = 0; i < sideLength; i++)
             {
+                //Converts 3Dimensional array into a 1Dimensional format.
                 x = (int)(i / size);
                 z = (int)(k / size);
 
@@ -280,7 +249,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 pointer += 1;
             }
         }
-
+        //Sets the new mesh colours, based on calculated difference
         gameObject.GetComponent<MeshFilter>().mesh.colors32 = calcColours(values1D.Max(), values1D);
     }
 
@@ -293,6 +262,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         foreach(double v in values)
         {
+            //Converts Density to a relative value between 1 and 0.15
             newCols[pointer] = UnityEngine.Color.HSVToRGB(1 - findDiff(maxVal, v), 0.5f, 1);
             pointer += 1;
         }
@@ -303,16 +273,13 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     private float findDiff(double maxVal, double current)
     {
+        //Finds the % difference between a current value and the maximum.
         double diff = maxVal - current;
         float output = Convert.ToSingle(Math.Abs(diff) / maxVal);
         output = Mathf.Clamp(output, 0.15f, 1f);
         return output;
     }
 
-    public int getSeed()
-    {
-        return seed;
-    }
 
 }
 

@@ -22,19 +22,15 @@ public class LinkBehaviour : MonoBehaviour
 
     public void changeSim(int iterations)
     {
-        visLogic.changeSimState(iterations);
+        //adds Initial velocity and starts the fluid simulation
+        addVelToFluid(getFluidCubeCount() - 1, 0, (getSL() * Math.Pow(1 + getModifiers()[0], 3)), 0);
+        startStopSim(iterations);
     }
 
     public void setColours(double[,,] values, int count)
     {
         visLogic.SetColours(values, count);
     }
-
-    public int GetSeed()
-    {
-        return visLogic.getSeed();
-    }
-
 
     //
     //fluidLogic links
@@ -109,5 +105,15 @@ public class LinkBehaviour : MonoBehaviour
     public void setCamera()
     {
         UILogic.setCamera();
+    }
+
+    public int GetSeed()
+    {
+        return UILogic.getSeed();
+    }
+
+    public double[] getModifiers()
+    {
+        return UILogic.getModifiers();
     }
 }
