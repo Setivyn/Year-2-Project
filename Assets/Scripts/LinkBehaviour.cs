@@ -32,6 +32,20 @@ public class LinkBehaviour : MonoBehaviour
         visLogic.SetColours(values, count);
     }
 
+    public void initMesh()
+    {
+        visLogic.initMeshObject();
+    }
+
+    public void updateMesh()
+    {
+        visLogic.updateMesh();
+    }
+
+    public void finaliseMesh()
+    {
+        visLogic.finaliseMesh();
+    }
     //
     //fluidLogic links
     public void startStopSim(int iterations)
@@ -96,7 +110,12 @@ public class LinkBehaviour : MonoBehaviour
 
     public void setMat(int sidePow, int seed, double[] mods)
     {
-        terrainLogic = new TerMat(sidePow, seed, mods);
+        terrainLogic = new TerMat(sidePow, seed, mods, this);
+    }
+
+    public void startGen()
+    {
+        terrainLogic.startDiSq();
     }
     //
     //UI links

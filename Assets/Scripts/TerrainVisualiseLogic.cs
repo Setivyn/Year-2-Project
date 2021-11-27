@@ -11,63 +11,64 @@ public class TerrainVisualiseLogic : MonoBehaviour
 {
     LinkBehaviour linkLogic;
     [SerializeField] Material meshMater;
-    int sideLength;
     int cubeN;
 
     private void Awake()
     {
-
-        //sets up local sidelength variable
-        sideLength = linkLogic.getSL();
+        linkLogic = FindObjectOfType<LinkBehaviour>();
     }
-
     void Start()
-    {
-    }
-
-    // Update is called once per frame
-    void Update()
     {
         
     }
 
-
     public void initMeshObject()
     {
-
-        linkLogic = FindObjectOfType<LinkBehaviour>();
-
+        
         //Set up mesh Components
-        var MF = gameObject.AddComponent<MeshFilter>();
-        var MR = gameObject.AddComponent<MeshRenderer>();
 
+        var MR = gameObject.AddComponent<MeshRenderer>();
+        var MF = gameObject.AddComponent<MeshFilter>();
+
+        MF.mesh = CreateMesh(linkLogic.getSL());
 
         MR.sharedMaterial = meshMater;
 
+    }
+    
+    public void updateMesh()
+    {
+        var MF = gameObject.GetComponent<MeshFilter>();
+        MF.mesh.vertices = SetVertices(linkLogic.getSL() * linkLogic.getSL(), linkLogic.getSL());
+        //MF.mesh = CreateMesh(linkLogic.getSL());
 
-        MF.mesh = CreateMesh(sideLength);
+        //Ensure Unity Renderers has the additional information necessary to create the mesh in gameSpace.
+        MF.mesh.RecalculateNormals();
+        MF.mesh.RecalculateBounds();
+        MF.mesh.Optimize();
+    }
+
+    public void finaliseMesh()
+    {
+        MeshFilter MF = gameObject.GetComponent<MeshFilter>();
+        MF.mesh = CreateMesh(linkLogic.getSL());
 
         var MC = gameObject.AddComponent<MeshCollider>().sharedMesh = MF.mesh;
 
         initSimulation();
 
         linkLogic.setCamera();
-
-
     }
-    
 
     Mesh CreateMesh(int sideLen)
     {
         Mesh outMesh = new Mesh();
 
         //Assign New Vertices
-        Vector3[] newVertices;
-        newVertices = SetVertices(sideLen * sideLen, sideLen);
-        outMesh.vertices = newVertices;
+        outMesh.vertices = SetVertices(sideLen * sideLen, sideLen);
 
         //Find and Set triangles
-        outMesh.triangles = SetTriangles(newVertices, sideLen);
+        outMesh.triangles = SetTriangles(sideLen);
 
         //Ensure Unity Renderers has the additional information necessary to create the mesh in gameSpace.
         outMesh.RecalculateNormals();
@@ -79,7 +80,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
         return outMesh;
     }
 
-    int[] SetTriangles(Vector3[] newVertices, int sideLen)
+    int[] SetTriangles(int sideLen)
 
     {
         int x = sideLen - 1;
@@ -218,7 +219,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
     void initSimulation()
     {
         //Initialises the simulation 
-        linkLogic.initSim(sideLength);
+        linkLogic.initSim(linkLogic.getSL());
         cubeN = linkLogic.getFluidCubeCount();
         linkLogic.addDensToFluid(cubeN - 2, 100);
         
@@ -226,6 +227,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     public void SetColours(double[,,] values, int N)
     {
+        int sideLength = linkLogic.getSL();
         double[] values1D = new double[(sideLength * sideLength) + (4 * sideLength)];
         int pointer = 0;
         int size = linkLogic.getFluidCubeSize();

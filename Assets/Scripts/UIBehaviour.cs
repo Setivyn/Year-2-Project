@@ -23,12 +23,11 @@ public class UIBehaviour : MonoBehaviour
     int sideLengthT;
     int seed;
 
+    bool stateBool;
+
     private void Awake()
-    {
-
-        //forces sidelength to be an odd power of 2 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
-        sideLengthT = (inputLen * 2) + 3;
-
+    { 
+        
         //sets the Seed for the PseudoRandom Generator used in the terrain gen. Creates a random integer value with large limits.
         seed = Guid.NewGuid().GetHashCode();
     }
@@ -39,7 +38,7 @@ public class UIBehaviour : MonoBehaviour
         linkLogic = FindObjectOfType<LinkBehaviour>();
         UIcamera = FindObjectOfType<Camera>();
 
-        gameObject.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Run Simulation";
+        gameObject.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Generate Terrain";
         gameObject.AddComponent<BoxCollider2D>();
 
         infoPanel = new GameObject("InfoPanel");
@@ -138,6 +137,9 @@ public class UIBehaviour : MonoBehaviour
 
         //Generate Terrain Matrix and assign to mesh filter
         linkLogic.setMat(sideLengthT, seed, modifiers);
+        linkLogic.initMesh();
+        linkLogic.startGen();
+
     }
 
     private double[] SetModifiers(double roughness, double steepness)
@@ -149,7 +151,7 @@ public class UIBehaviour : MonoBehaviour
 
     public void setCamera()
     {
-        
+
         int SLhalf = linkLogic.getSL() / 2;
         float x, y, z;
 
@@ -160,12 +162,36 @@ public class UIBehaviour : MonoBehaviour
         UIcamera.transform.position = new Vector3(x, y, z);
         gameObject.transform.position = UIcamera.transform.position;
         gameObject.transform.rotation = UIcamera.transform.rotation;
-        gameObject.GetComponent<BoxCollider2D>().size = new Vector2(SLhalf * 10,SLhalf * 10);
+        gameObject.GetComponent<BoxCollider2D>().size = new Vector2(SLhalf * 10, SLhalf * 10);
     }
 
     public void runSim()
     {
-        linkLogic.changeSim(4);
+        if(stateBool == false)
+        {
+            //forces sidelength to be an odd power of 2 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
+            sideLengthT = (inputLen * 2) + 3;
+
+            stateBool = true;
+            createTerrain();
+            foreach (Button butt in gameObject.GetComponentsInChildren<Button>())
+            {
+                if (butt.CompareTag("SimControl"))
+                {
+                    butt.GetComponentInChildren<Text>().text = "Run Simulation";
+                }
+            }
+        }
+        else
+        {
+            linkLogic.changeSim(4);
+        }
+        
+    }
+
+    public void openCloseSettings()
+    {
+
     }
 
     public int getSeed()

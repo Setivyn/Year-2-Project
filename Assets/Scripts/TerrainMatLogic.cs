@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Threading;
 
 public class TerMat
 {
@@ -12,9 +13,13 @@ public class TerMat
     protected System.Random rand;
     protected List<int[]> Centers; //List of Centers, reset for each layer
     protected double noiseMod, heightMod; //Roughness, Steepness
+    LinkBehaviour linkLogic;
+    int startPow;
 
-    public TerMat(int SidePow, int seed, double[] modifiers)
+    public TerMat(int SidePow, int seed, double[] modifiers, LinkBehaviour linkLog)
     {
+        startPow = SidePow;
+        linkLogic = linkLog;
         Centers = new List<int[]>();
         rand = new System.Random(seed); //Generate a new set of random values, global to avoid repeats as using single seed for simulation
         sideLenIndex = Convert.ToInt32(Mathf.Pow(2, SidePow));
@@ -30,8 +35,12 @@ public class TerMat
         SetCorners(Centers[0], sideLenIndex);
         altitudeMap[Centers[0][0], Centers[0][1]] = AveragePointsCenter(sideLenIndex, Centers[0]);
         SetEdgesForCenter(Centers[0], SidePow - 1);
+    }
 
-        DiamondSquare(SidePow - 1);
+    public void startDiSq()
+    {
+        linkLogic.updateMesh();
+        DiamondSquare(startPow - 1);
     }
 
     void DiamondSquare(int sidePow)
@@ -56,7 +65,22 @@ public class TerMat
             SetEdgesForCenter(Center, sidePow - 1);
         });
 
-        if (sidePow > 1) {DiamondSquare(sidePow - 1);}
+
+        Thread.Sleep(500);
+        linkLogic.updateMesh();
+
+        if (sidePow > 1) { DiamondSquare(sidePow - 1); }
+        else 
+        {
+            for (int y = 0; y <= sideLenIndex; y ++ )
+            {
+                for (int x = 0; x <= sideLenIndex; x ++)
+                {
+                    altitudeMap[x, y] = Mathf.Clamp((float)altitudeMap[x, y], linkLogic.getFluidCubeSize() * 2, sideLenIndex);
+                }
+            }
+            linkLogic.finaliseMesh(); 
+        }
     }
 
     private List<int[]> FindSubCenters(int[] center, int sidePow)
