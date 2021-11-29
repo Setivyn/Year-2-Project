@@ -10,20 +10,23 @@ public class UIBehaviour : MonoBehaviour
     LinkBehaviour linkLogic;
     Camera UIcamera;
     MeshCollider meshCollider;
-    GameObject infoPanel;
-    GameObject infoPanelBG, infoPanelFG, infoPanelTxt1, infoPanelTxt2;
-    Image panelImageBG, panelImageFG;
-    Text panelText1, panelText2;
+    GameObject settButton, infoButton;
+    GameObject infoPanel, settPanel;
+    GameObject infoPanelBG, infoPanelFG, infoPanelTxt1, infoPanelTxt2, settPanelBG, settPanelFG, settPanelTxt1, settPanelTxt2;
+    Image infoPanelImageBG, infoPanelImageFG, settPanelImageBG, settPanelImageFG;
+    Text infoPanelTextObject1, infoPanelTextObject2, settPanelTextObject1, settPanelTextObject2;
+    Slider roughSlider, steepSlider, lenSlider;
+    InputField xCoord, yCoord;
 
-    [SerializeField] [Range(0.0f, 2f)] double Roughness;
-    [SerializeField] [Range(0.0f, 0.8f)] double Steepness;
-    [SerializeField] [Range(1, 4)] int inputLen;
+    double Roughness;
+    double Steepness;
+    int inputLen;
 
     double[] modifiers;
     int sideLengthT;
     int seed;
 
-    bool stateBool;
+    bool infoStateBool, settStateBool;
 
     private void Awake()
     { 
@@ -35,11 +38,19 @@ public class UIBehaviour : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //Initialise values
         linkLogic = FindObjectOfType<LinkBehaviour>();
         UIcamera = FindObjectOfType<Camera>();
 
-        gameObject.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Generate Terrain";
+        settButton = GameObject.FindGameObjectWithTag("Settings");
+        infoButton = GameObject.FindGameObjectWithTag("SimControl");
+
+        infoButton.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Generate Terrain";
+        settButton.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Settings";
         gameObject.AddComponent<BoxCollider2D>();
+
+        //
+        //Setup InfoPanel
 
         infoPanel = new GameObject("InfoPanel");
         infoPanel.transform.SetParent(gameObject.transform, false);
@@ -52,32 +63,129 @@ public class UIBehaviour : MonoBehaviour
         col[0] = col[1] = col[2] = 200; col[3] = 255;
         size[0] = 250; size[1] = 350;
 
-        InitPanelSegment(ref infoPanelBG, out panelImageBG, pos, col, size, "IfBxBG");
+        InitPanelSegment(infoPanel, ref infoPanelBG, out infoPanelImageBG, pos, col, size, "IfBxBG");
 
         pos[0] = -298; pos[1] = 200; pos[2] = 0;
         col[0] = col[1] = col[2] = 255; col[3] = 255;
         size[0] = 207; size[1] = 50;
 
-        InitPanelSegment(ref infoPanelFG, out panelImageFG, pos, col, size, "IfBxFG");
+        InitPanelSegment(infoPanel, ref infoPanelFG, out infoPanelImageFG, pos, col, size, "IfBxFG");
 
-        pos[0] = -320; pos[1] = 162; pos[2] = 0;
+        pos[0] = -350; pos[1] = 162; pos[2] = 0;
 
-        InitPanelText(ref infoPanelTxt1, out panelText1, pos, "Flooding Info", "IfTxt1");
+        InitPanelText(infoPanel, ref infoPanelTxt1, out infoPanelTextObject1, pos, "Flooding Info", "IfTxt1");
 
-        pos[0] = -300; pos[1] = 100; pos[2] = 0;
+        pos[0] = -350; pos[1] = 100; pos[2] = 0;
 
-        InitPanelText(ref infoPanelTxt2, out panelText2, pos, "PH text", "IfTxt1");
+        InitPanelText(infoPanel, ref infoPanelTxt2, out infoPanelTextObject2, pos, "PH text", "IfTxt1");
+
+        pos[0] = -280; pos[1] = 150; pos[2] = 0;
+
+        InitInput(infoPanel, ref xCoord, pos, "xCoord",  "x", "IfIn1");
+        xCoord.onEndEdit.AddListener(delegate { updateInfo(xCoord.text, yCoord.text); });
+
+        pos[0] = -360; pos[1] = 150; pos[2] = 0;
+
+        InitInput(infoPanel, ref yCoord, pos, "yCoord", "y", "IfIn1");
+        yCoord.onEndEdit.AddListener(delegate { updateInfo(xCoord.text, yCoord.text); });
 
         infoPanel.SetActive(false);
+
+        //
+        //Set up Settings Panel
+        settPanel = new GameObject("SettingsPanel");
+        settPanel.transform.SetParent(gameObject.transform, false);
+
+        pos[0] = 360; pos[1] = 50; pos[2] = 0;
+        col[0] = col[1] = col[2] = 200; col[3] = 255;
+        size[0] = 250; size[1] = 350;
+
+        InitPanelSegment(settPanel, ref settPanelBG, out settPanelImageBG, pos, col, size, "StBxBG");
+
+        pos[0] = 298; pos[1] = 200; pos[2] = 0;
+        col[0] = col[1] = col[2] = 255; col[3] = 255;
+        size[0] = 207; size[1] = 50;
+
+        InitPanelSegment(settPanel, ref settPanelFG, out settPanelImageFG, pos, col, size, "StBxFG");
+
+        pos[0] = 260; pos[1] = 162; pos[2] = 0;
+
+        InitPanelText(settPanel, ref settPanelTxt1, out settPanelTextObject1, pos, "Settings", "StTxt1");
+
+        pos[0] = 320; pos[1] = 120; pos[2] = 0;
+        
+        InitPanelText(settPanel, ref settPanelTxt2, out settPanelTextObject2, pos, "Roughness; \n Steepness; \n sideLen;", "StTxt2");
+
+        float[] clamp = { 0, 2f };
+        pos[0] = 330; pos[1] = 90; pos[2] = 0;
+
+        InitSlider(settPanel, ref roughSlider, "roughSlider", clamp, pos, "Roughness");
+        roughSlider.onValueChanged.AddListener(delegate { updateSetting(1, roughSlider); });
+
+        clamp[0] = 0; clamp[1] = 1f;
+        pos[0] = 345; pos[1] = 60; pos[2] = 0;
+
+        InitSlider(settPanel, ref steepSlider, "steepSlider", clamp, pos, "Steepness");
+        steepSlider.onValueChanged.AddListener(delegate { updateSetting(2, steepSlider); });
+
+        clamp[0] = 1f; clamp[1] = 6f;
+        pos[0] = 355; pos[1] = 30; pos[2] = 0;
+
+        InitSlider(settPanel, ref lenSlider, "lenSlider", clamp, pos, "Length");
+        lenSlider.onValueChanged.AddListener(delegate { updateSetting(3, lenSlider); });
+
+
+        settPanel.SetActive(false);
+
+        //
+
     }
 
-    private void InitPanelText(ref GameObject segment, out Text segmentTextField, int[] position, string text, string name)
+    private void InitInput(GameObject panel, ref InputField field, int[] position, string tag, string text, string name)
+    {
+        field = GameObject.FindGameObjectWithTag(tag).GetComponent<InputField>();
+        field.transform.SetParent(panel.transform, false);
+
+        field.name = name;
+        Vector3 newPos = new Vector3(position[0] + gameObject.transform.position.x / gameObject.transform.localScale.x,
+                                    position[1] + gameObject.transform.position.y / gameObject.transform.localScale.y,
+                                    position[2] + gameObject.transform.position.z / gameObject.transform.localScale.z);
+        field.transform.position = Vector3.Scale(newPos, gameObject.transform.localScale);
+
+        field.text = text;
+    }
+
+    private void InitSlider(GameObject panel, ref Slider sliderObject, string tag, float[] clamp, int[] position, string name)
+    {
+        Slider[] sliders = FindObjectsOfType<Slider>();
+        foreach (Slider slider in sliders)
+        {
+            if (slider.tag == tag)
+            {
+                sliderObject = slider;
+            }
+        }
+
+        sliderObject.transform.SetParent(panel.transform, false);
+        sliderObject.name = name;
+
+
+        Vector3 newPos = new Vector3(position[0] + gameObject.transform.position.x / gameObject.transform.localScale.x,
+                                    position[1] + gameObject.transform.position.y / gameObject.transform.localScale.y,
+                                    position[2] + gameObject.transform.position.z / gameObject.transform.localScale.z);
+        sliderObject.transform.position = Vector3.Scale(newPos, gameObject.transform.localScale);
+
+        sliderObject.minValue = clamp[0]; sliderObject.maxValue = clamp[1];
+
+    }
+
+    private void InitPanelText(GameObject panel, ref GameObject segment, out Text segmentTextField, int[] position, string text, string name)
     {
         segment = new GameObject(name);
         segment.AddComponent<CanvasRenderer>();
         segmentTextField = segment.AddComponent<Text>();
 
-        segment.transform.SetParent(infoPanel.transform, false);
+        segment.transform.SetParent(panel.transform, false);
 
         segmentTextField.text = text;
         segmentTextField.color = new Color(0, 0, 0, 255);
@@ -87,17 +195,18 @@ public class UIBehaviour : MonoBehaviour
                                     position[1] + gameObject.transform.position.y / gameObject.transform.localScale.y,
                                     position[2] + gameObject.transform.position.z / gameObject.transform.localScale.z);
         segment.transform.position = Vector3.Scale(newPos, gameObject.transform.localScale);
+
+        RectTransform segTransf = segment.GetComponent<RectTransform>();
+        segTransf.sizeDelta = new Vector2(200,100);
     }
 
-    private void InitPanelSegment(ref GameObject segment, out Image segmentImage, int[] position, byte[] colour, int[] size, string name)
+    private void InitPanelSegment(GameObject panel, ref GameObject segment, out Image segmentImage, int[] position, byte[] colour, int[] size, string name)
     {
         segment = new GameObject(name);
         segment.AddComponent<CanvasRenderer>();
         segmentImage = segment.AddComponent<Image>();
 
-        segment.transform.SetParent(infoPanel.transform, false);
-
-
+        segment.transform.SetParent(panel.transform, false);
 
         segmentImage.color = new Color32(colour[0], colour[1], colour[2], colour[3]);
 
@@ -111,10 +220,7 @@ public class UIBehaviour : MonoBehaviour
     }
 
     // Update is called once per frame
-    void Update()
-    {
-
-    }
+    
 
     public void OnMouseDown()
     {
@@ -123,10 +229,51 @@ public class UIBehaviour : MonoBehaviour
 
         if (FindObjectOfType<TerrainVisualiseLogic>().GetComponentInParent<MeshCollider>().Raycast(ray, out hit, Mathf.Infinity))
         {
-            panelText2.text = ("( " + (int)hit.point.x + ", " + (int)hit.point.y + " ) \n Local Density: " + (linkLogic.getDensAtPoint(hit.point) * 100));
-
+            infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(hit.point) * 100));
+            xCoord.text = ((int)hit.point.x).ToString();
+            yCoord.text = ((int)hit.point.y).ToString();
             infoPanel.SetActive(true);
         }
+    }
+
+    void updateInfo(string xInput, string zInput)
+    {
+        int CubeLen = linkLogic.getFluidCubeSize();
+        int x, z;
+        try
+        {
+            x = Convert.ToInt32(xInput);
+        }
+        catch
+        {
+            x = 0;
+        }
+
+        try
+        {
+            z = Convert.ToInt32(zInput);
+        }
+        catch
+        {
+            z = 0;
+        }
+
+        x = Mathf.Clamp(x, 0, linkLogic.getSL());
+
+        infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(x / CubeLen, (int)linkLogic.matAtXY(x,z) / CubeLen, z / CubeLen) * 100));
+
+        xCoord.text = (x).ToString();
+        yCoord.text = (z).ToString();
+    }
+
+    void updateSetting(int setting, Slider slider)
+    {
+        if (setting == 1) { Roughness = slider.value; }
+        
+        else if (setting == 2) { Steepness = slider.value; }
+        //forces sidelength to be an odd power of 2 from ^3 up to ^15. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
+        else { sideLengthT = (2 * (int)slider.value) + 1; }
+        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) - 1);
     }
 
     public void createTerrain()
@@ -167,20 +314,12 @@ public class UIBehaviour : MonoBehaviour
 
     public void runSim()
     {
-        if(stateBool == false)
+        if(infoStateBool == false)
         {
-            //forces sidelength to be an odd power of 2 from ^5 up to ^11. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
-            sideLengthT = (inputLen * 2) + 3;
 
-            stateBool = true;
+            infoStateBool = true;
             createTerrain();
-            foreach (Button butt in gameObject.GetComponentsInChildren<Button>())
-            {
-                if (butt.CompareTag("SimControl"))
-                {
-                    butt.GetComponentInChildren<Text>().text = "Run Simulation";
-                }
-            }
+            infoButton.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Run Simulation";
         }
         else
         {
@@ -191,7 +330,7 @@ public class UIBehaviour : MonoBehaviour
 
     public void openCloseSettings()
     {
-
+        settPanel.SetActive(!settPanel.activeSelf);
     }
 
     public int getSeed()

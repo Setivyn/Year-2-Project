@@ -239,10 +239,12 @@ public class TerrainVisualiseLogic : MonoBehaviour
             for (int i = 0; i < sideLength; i++)
             {
                 //Converts 3Dimensional array into a 1Dimensional format.
-                x = (int)(i / size);
-                z = (int)(k / size);
+                x = (i / size);
+                z = (k / size);
 
                 y = (int)linkLogic.matAtXY(i, k) / size;
+
+                Debug.Log(x + "," + y + "," + z);
 
                 val = values[x, y, z];
 

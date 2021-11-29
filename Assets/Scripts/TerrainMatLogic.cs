@@ -167,10 +167,10 @@ public class TerMat
     {
         int halfLen = sideLenIndex / 2;
         //Sets the Initial Corners
-        altitudeMap[PointMinusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod + 6;
-        altitudeMap[PointMinusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod + 6;
-        altitudeMap[PointPlusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod + 6;
-        altitudeMap[PointPlusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex * heightMod + 6;
+        altitudeMap[PointMinusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex + 6 + ((rand.NextDouble() - 0.5) * heightMod);
+        altitudeMap[PointMinusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex + 6 + ((rand.NextDouble() - 0.5) * heightMod);
+        altitudeMap[PointPlusLen(Center, 0, halfLen), PointMinusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex + 6 + ((rand.NextDouble() - 0.5) * heightMod);
+        altitudeMap[PointPlusLen(Center, 0, halfLen), PointPlusLen(Center, 1, halfLen)] = rand.NextDouble() * sideLenIndex  + 6 + ((rand.NextDouble() - 0.5) * heightMod);
     }
 
     public TerMat(int[,] PreMadeMat)

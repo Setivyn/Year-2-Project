@@ -6,6 +6,11 @@ TagManager:
   tags:
   - Settings
   - SimControl
+  - roughSlider
+  - steepSlider
+  - lenSlider
+  - xCoord
+  - yCoord
   layers:
   - Default
   - TransparentFX
