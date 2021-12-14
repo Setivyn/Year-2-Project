@@ -11,16 +11,18 @@ public class UIBehaviour : MonoBehaviour
     Camera UIcamera;
     MeshCollider meshCollider;
     GameObject settButton, infoButton;
-    GameObject infoPanel, settPanel;
-    GameObject infoPanelBG, infoPanelFG, infoPanelTxt1, infoPanelTxt2, settPanelBG, settPanelFG, settPanelTxt1, settPanelTxt2;
-    Image infoPanelImageBG, infoPanelImageFG, settPanelImageBG, settPanelImageFG;
-    Text infoPanelTextObject1, infoPanelTextObject2, settPanelTextObject1, settPanelTextObject2;
-    Slider roughSlider, steepSlider, lenSlider;
+    GameObject infoPanel, settPanel, fSettPanel;
+    GameObject infoPanelBG, infoPanelFG, infoPanelTxt1, infoPanelTxt2, settPanelBG, settPanelFG, settPanelTxt1, settPanelTxt2, fSettPanelBG, fSettPanelFG, fSettPanelTxt1, fSettPanelTxt2;
+    Image infoPanelImageBG, infoPanelImageFG, settPanelImageBG, settPanelImageFG, fSettPanelImageBG, fSettPanelImageFG;
+    Text infoPanelTextObject1, infoPanelTextObject2, settPanelTextObject1, settPanelTextObject2, fSettPanelTextObject1, fSettPanelTextObject2;
+    Slider roughSlider, steepSlider, lenSlider, diffSlider, viscSlider, dtSlider;
+    Toggle complexButton;
     InputField xCoord, yCoord;
 
     double Roughness;
     double Steepness;
     int inputLen;
+    double risk;
 
     double[] modifiers;
     int sideLengthT;
@@ -138,7 +140,69 @@ public class UIBehaviour : MonoBehaviour
         settPanel.SetActive(false);
 
         //
+        // Set Up Fluid Settings Panel
+        fSettPanel = new GameObject("FluidSettingsPanel");
+        fSettPanel.transform.SetParent(gameObject.transform, false);
 
+        pos[0] = 360; pos[1] = 50; pos[2] = 0;
+        col[0] = col[1] = col[2] = 200; col[3] = 255;
+        size[0] = 250; size[1] = 350;
+
+        InitPanelSegment(fSettPanel, ref fSettPanelBG, out fSettPanelImageBG, pos, col, size, "FStBxBG");
+
+        pos[0] = 298; pos[1] = 200; pos[2] = 0;
+        col[0] = col[1] = col[2] = 255; col[3] = 255;
+        size[0] = 207; size[1] = 50;
+
+        InitPanelSegment(fSettPanel, ref fSettPanelFG, out fSettPanelImageFG, pos, col, size, "FStBxFG");
+
+        pos[0] = 260; pos[1] = 162; pos[2] = 0;
+
+        InitPanelText(fSettPanel, ref fSettPanelTxt1, out fSettPanelTextObject1, pos, "Fluid Settings", "FStTxt1");
+
+        pos[0] = 320; pos[1] = 120; pos[2] = 0;
+
+        InitPanelText(fSettPanel, ref fSettPanelTxt2, out fSettPanelTextObject2, pos, "Complexity; \n Diffusion; \n Viscosity; \n Time Step;", "FStTxt2");
+
+        pos[0] = 325; pos[1] = 80; pos[2] = 0;
+
+        InitToggle(fSettPanel, ref complexButton, pos, "complexity", "Complexity");
+        complexButton.onValueChanged.AddListener(delegate { changeComplexity(); updateFluidSetting(0, diffSlider); });
+
+        clamp[0] = 0; clamp[1] = 1f;
+        pos[0] = 345; pos[1] = 60; pos[2] = 0;
+
+        InitSlider(fSettPanel, ref diffSlider, "diffSlider", clamp, pos, "Diffusion");
+        diffSlider.onValueChanged.AddListener(delegate { updateFluidSetting(1, diffSlider); });
+
+        clamp[0] = 0; clamp[1] = 1f;
+        pos[0] = 355; pos[1] = 30; pos[2] = 0;
+
+        InitSlider(fSettPanel, ref viscSlider, "viscSlider", clamp, pos, "Viscosity");
+        viscSlider.onValueChanged.AddListener(delegate { updateFluidSetting(2, viscSlider); });
+
+        clamp[0] = 1f; clamp[1] = 100f;
+        pos[0] = 370; pos[1] = 10; pos[2] = 0;
+
+        InitSlider(fSettPanel, ref dtSlider, "dtSlider", clamp, pos, "Time Step");
+        dtSlider.onValueChanged.AddListener(delegate { updateFluidSetting(3, dtSlider); });
+
+
+        fSettPanel.SetActive(false);
+
+        //
+    }
+
+    private void InitToggle(GameObject panel, ref Toggle toggle, int[] position, string tag, string name)
+    {
+        toggle = GameObject.FindGameObjectWithTag(tag).GetComponent<Toggle>();
+        toggle.transform.SetParent(panel.transform, false);
+
+        toggle.name = name;
+        Vector3 newPos = new Vector3(position[0] + gameObject.transform.position.x / gameObject.transform.localScale.x,
+                                    position[1] + gameObject.transform.position.y / gameObject.transform.localScale.y,
+                                    position[2] + gameObject.transform.position.z / gameObject.transform.localScale.z);
+        toggle.transform.position = Vector3.Scale(newPos, gameObject.transform.localScale);
     }
 
     private void InitInput(GameObject panel, ref InputField field, int[] position, string tag, string text, string name)
@@ -157,14 +221,7 @@ public class UIBehaviour : MonoBehaviour
 
     private void InitSlider(GameObject panel, ref Slider sliderObject, string tag, float[] clamp, int[] position, string name)
     {
-        Slider[] sliders = FindObjectsOfType<Slider>();
-        foreach (Slider slider in sliders)
-        {
-            if (slider.tag == tag)
-            {
-                sliderObject = slider;
-            }
-        }
+        sliderObject = GameObject.FindGameObjectWithTag(tag).GetComponent<Slider>();
 
         sliderObject.transform.SetParent(panel.transform, false);
         sliderObject.name = name;
@@ -260,7 +317,7 @@ public class UIBehaviour : MonoBehaviour
 
         x = Mathf.Clamp(x, 0, linkLogic.getSL());
 
-        infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(x / CubeLen, (int)linkLogic.matAtXY(x,z) / CubeLen, z / CubeLen) * 100));
+        infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(x / CubeLen, (int)linkLogic.matAtXY(x,z) / CubeLen, z / CubeLen) * 100) + "\n Grid Risk: " + risk);
 
         xCoord.text = (x).ToString();
         yCoord.text = (z).ToString();
@@ -274,6 +331,16 @@ public class UIBehaviour : MonoBehaviour
         //forces sidelength to be an odd power of 2 from ^3 up to ^15. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
         else { sideLengthT = (2 * (int)slider.value) + 1; }
         settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) - 1);
+    }
+
+    void updateFluidSetting(int setting, Slider slider)
+    {
+        int complex = linkLogic.getComplex() == true ? 1 : 3;
+        if (setting == 1) {linkLogic.setDiffConst(slider.value); }
+
+        else if (setting == 2) { linkLogic.setViscConst(slider.value); }
+        else if (setting == 3) { linkLogic.setDt(slider.value); }
+        fSettPanelTextObject2.text = "Complexity;" + complex +  "\n Diffusion;" + Math.Round(linkLogic.getDiff(),2) + " \n Viscosity;" + Math.Round(linkLogic.getVisc(),2) + " \n Time Step; " + Math.Round(linkLogic.getDt(),2);
     }
 
     public void createTerrain()
@@ -320,6 +387,7 @@ public class UIBehaviour : MonoBehaviour
             infoStateBool = true;
             createTerrain();
             infoButton.GetComponentInChildren<Button>().GetComponentInChildren<Text>().text = "Run Simulation";
+            settPanel.SetActive(false);
         }
         else
         {
@@ -327,10 +395,21 @@ public class UIBehaviour : MonoBehaviour
         }
         
     }
+    public void setRisk()
+    {
+        risk = (sideLengthT * Steepness) / (Roughness * inputLen);
+    }
 
     public void openCloseSettings()
     {
-        settPanel.SetActive(!settPanel.activeSelf);
+        if (infoStateBool == false)
+        {
+            settPanel.SetActive(!settPanel.activeSelf);
+        }
+        else
+        {
+            fSettPanel.SetActive(!fSettPanel.activeSelf);
+        }
     }
 
     public int getSeed()
@@ -341,5 +420,25 @@ public class UIBehaviour : MonoBehaviour
     public double[] getModifiers()
     {
         return modifiers;
+    }
+
+    public double getRisk()
+    {
+        return risk;
+    }
+    public void changeComplexity()
+    {
+        bool Complex = complexButton.isOn;
+        changeToggleColour(Complex);
+        linkLogic.setDivSize(Complex);
+
+    }
+
+    private void changeToggleColour(bool complex)
+    {
+        ColorBlock newCol = new ColorBlock();
+        newCol.normalColor = complex ? new Color(0,1,0) : new Color(1, 1, 1);
+        newCol.pressedColor = complex ? new Color(0, 1, 0) : new Color(1, 1, 1);
+        complexButton.colors = newCol;
     }
 }

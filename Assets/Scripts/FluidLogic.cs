@@ -454,6 +454,60 @@ public class FluidLogic : MonoBehaviour
         return cubes.size;
     }
 
+    public void setDivSize(bool simple)
+    {
+        if(simple)
+        {
+            divSizeI = 3;
+        }
+        else
+        {
+            divSizeI = 1;
+        }
+    }
+
+    public void setDiffConst(double value)
+    {
+        diffI = value;
+    }
+
+    public void setViscConst(double value)
+    {
+        viscI = value;
+    }
+
+    public void setDt(double value)
+    {
+        dtI = value;
+    }
+
+    public bool getComplex()
+    {
+        if(divSizeI == 1)
+        {
+            return true;
+            
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    public double getDiff()
+    {
+        return diffI;
+    }
+
+    public double getVisc()
+    {
+        return viscI;
+    }
+
+    public double getDt()
+    {
+        return dtI;
+    }
 }
 
 

@@ -23,7 +23,7 @@ public class LinkBehaviour : MonoBehaviour
     public void changeSim(int iterations)
     {
         //adds Initial velocity and starts the fluid simulation
-        addVelToFluid(getFluidCubeCount() - 1, 0, (getSL() * Math.Pow(1 + getModifiers()[0], 3)), 0);
+        addVelToFluid(getFluidCubeCount() - 1, 0, (getSL() * Math.Pow(1 + getModifiers()[0], 3) / getDt()), 0);
         startStopSim(iterations);
     }
 
@@ -96,6 +96,44 @@ public class LinkBehaviour : MonoBehaviour
         fluidLogic.ceaseVelAdd();
     }
 
+    public void setDivSize(bool simple)
+    {
+        fluidLogic.setDivSize(simple);
+    }
+
+    public void setDiffConst(double value)
+    {
+        fluidLogic.setDiffConst(value);
+    }
+
+    public void setViscConst(double value)
+    {
+        fluidLogic.setViscConst(value);
+    }
+
+    public void setDt(double value)
+    {
+        fluidLogic.setDt(value);
+    }
+
+    public bool getComplex()
+    {
+        return fluidLogic.getComplex();
+    }
+    public double getDiff()
+    {
+        return fluidLogic.getDiff();
+    }
+
+    public double getVisc()
+    {
+        return fluidLogic.getVisc();
+    }
+
+    public double getDt()
+    {
+        return fluidLogic.getDt();
+    }
     //
     //TerrainMat links
     public double matAtXY(int x, int y)

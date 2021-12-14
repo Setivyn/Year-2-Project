@@ -11,6 +11,10 @@ TagManager:
   - lenSlider
   - xCoord
   - yCoord
+  - diffSlider
+  - viscSlider
+  - dtSlider
+  - complexity
   layers:
   - Default
   - TransparentFX
