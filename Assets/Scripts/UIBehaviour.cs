@@ -331,7 +331,7 @@ public class UIBehaviour : MonoBehaviour
         else if (setting == 2) { Steepness = slider.value; }
         //forces sidelength to be an odd power of 2 from ^3 up to ^15. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
         else { sideLengthT = (2 * (int)slider.value) + 1; }
-        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) - 1);
+        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) + 1);
     }
 
     void updateFluidSetting(int setting, Slider slider)
@@ -392,7 +392,8 @@ public class UIBehaviour : MonoBehaviour
         }
         else
         {
-            linkLogic.initSim(linkLogic.getSL());
+            linkLogic.initSim(linkLogic.getSL() + 1);
+            linkLogic.addDensToFluid(linkLogic.getFluidCubeCount() - 2, 100);
             linkLogic.changeSim(4);
         }
         

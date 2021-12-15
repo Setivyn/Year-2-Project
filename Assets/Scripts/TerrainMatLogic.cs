@@ -39,7 +39,7 @@ public class TerMat
 
     public void startDiSq()
     {
-        linkLogic.updateMesh();
+        //linkLogic.updateMesh();
         DiamondSquare(startPow - 1);
     }
 
@@ -66,8 +66,8 @@ public class TerMat
         });
 
 
-        Thread.Sleep(500);
-        linkLogic.updateMesh();
+        /*Thread.Sleep(500);
+        linkLogic.updateMesh();*/
 
         if (sidePow > 1) { DiamondSquare(sidePow - 1); }
         else 
@@ -76,7 +76,7 @@ public class TerMat
             {
                 for (int x = 0; x <= sideLenIndex; x ++)
                 {
-                    altitudeMap[x, y] = Mathf.Clamp((float)altitudeMap[x, y], 6, sideLenIndex);
+                    altitudeMap[x, y] = Mathf.Clamp((float)altitudeMap[x, y], 9, sideLenIndex - 9);
                 }
             }
             linkLogic.finaliseMesh(); 

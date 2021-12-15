@@ -37,11 +37,6 @@ public class LinkBehaviour : MonoBehaviour
         visLogic.initMeshObject();
     }
 
-    public void updateMesh()
-    {
-        visLogic.updateMesh();
-    }
-
     public void finaliseMesh()
     {
         visLogic.finaliseMesh();

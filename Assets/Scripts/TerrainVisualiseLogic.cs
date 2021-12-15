@@ -30,28 +30,17 @@ public class TerrainVisualiseLogic : MonoBehaviour
         var MR = gameObject.AddComponent<MeshRenderer>();
         var MF = gameObject.AddComponent<MeshFilter>();
 
-        MF.mesh = CreateMesh(linkLogic.getSL());
+        MF.mesh = CreateMesh(linkLogic.getSL() + 1);
 
         MR.sharedMaterial = meshMater;
 
     }
     
-    public void updateMesh()
-    {
-        var MF = gameObject.GetComponent<MeshFilter>();
-        MF.mesh.vertices = SetVertices(linkLogic.getSL() * linkLogic.getSL(), linkLogic.getSL());
-        //MF.mesh = CreateMesh(linkLogic.getSL());
-
-        //Ensure Unity Renderers has the additional information necessary to create the mesh in gameSpace.
-        MF.mesh.RecalculateNormals();
-        MF.mesh.RecalculateBounds();
-        MF.mesh.Optimize();
-    }
 
     public void finaliseMesh()
     {
         MeshFilter MF = gameObject.GetComponent<MeshFilter>();
-        MF.mesh = CreateMesh(linkLogic.getSL());
+        MF.mesh = CreateMesh(linkLogic.getSL() + 1);
 
         var MC = gameObject.AddComponent<MeshCollider>().sharedMesh = MF.mesh;
 
@@ -65,7 +54,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         //Assign New Vertices
         outMesh.vertices = SetVertices(sideLen * sideLen, sideLen);
-
         //Find and Set triangles
         outMesh.triangles = SetTriangles(sideLen);
 
@@ -215,18 +203,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
     //FLUID INTERFACE
 
-    void initSimulation()
-    {
-        //Initialises the simulation 
-        linkLogic.initSim(linkLogic.getSL() + 1);
-        cubeN = linkLogic.getFluidCubeCount();
-        linkLogic.addDensToFluid(cubeN - 2, 100);
-    }
 
     public void SetColours(double[,,] values, int N)
     {
         int sideLength = linkLogic.getSL();
-        double[] values1D = new double[(sideLength * sideLength) + (4 * sideLength)];
+        double[] values1D = new double[(sideLength + 1)*(sideLength + 1) + 4 * (sideLength + 1)];
         int pointer = 0;
         int size = linkLogic.getFluidCubeSize();
         int x, y, z;
@@ -237,11 +218,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
             for (int i = 0; i < sideLength; i++)
             {
                 //Converts 3Dimensional array into a 1Dimensional format.
-                x = (i / size);
-                z = (k / size);
+                x = (int)Math.Floor((double)i / size);
+                z = (int)Math.Floor((double)k / size);
 
                 y = (int)linkLogic.matAtXY(i, k) / size;
-                
+                //Debug.Log("x: " + i + "; " + x + ", z: " + k + "; " + z + ", y: " + y + ", ptn: " + pointer) ;
                 val = values[x, y, z];
 
                 values1D[pointer] = val;
