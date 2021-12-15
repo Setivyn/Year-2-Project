@@ -55,7 +55,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
 
         var MC = gameObject.AddComponent<MeshCollider>().sharedMesh = MF.mesh;
 
-        initSimulation();
 
         linkLogic.setCamera();
     }
@@ -219,10 +218,9 @@ public class TerrainVisualiseLogic : MonoBehaviour
     void initSimulation()
     {
         //Initialises the simulation 
-        linkLogic.initSim(linkLogic.getSL());
+        linkLogic.initSim(linkLogic.getSL() + 1);
         cubeN = linkLogic.getFluidCubeCount();
         linkLogic.addDensToFluid(cubeN - 2, 100);
-        
     }
 
     public void SetColours(double[,,] values, int N)
@@ -243,9 +241,7 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 z = (k / size);
 
                 y = (int)linkLogic.matAtXY(i, k) / size;
-
-                Debug.Log(x + "," + y + "," + z);
-
+                
                 val = values[x, y, z];
 
                 values1D[pointer] = val;

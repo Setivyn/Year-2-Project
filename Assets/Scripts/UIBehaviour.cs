@@ -316,6 +316,7 @@ public class UIBehaviour : MonoBehaviour
         }
 
         x = Mathf.Clamp(x, 0, linkLogic.getSL());
+        z = Mathf.Clamp(z, 0, linkLogic.getSL());
 
         infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(x / CubeLen, (int)linkLogic.matAtXY(x,z) / CubeLen, z / CubeLen) * 100) + "\n Grid Risk: " + risk);
 
@@ -391,6 +392,7 @@ public class UIBehaviour : MonoBehaviour
         }
         else
         {
+            linkLogic.initSim(linkLogic.getSL());
             linkLogic.changeSim(4);
         }
         

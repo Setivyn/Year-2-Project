@@ -76,7 +76,7 @@ public class TerMat
             {
                 for (int x = 0; x <= sideLenIndex; x ++)
                 {
-                    altitudeMap[x, y] = Mathf.Clamp((float)altitudeMap[x, y], linkLogic.getFluidCubeSize() * 2, sideLenIndex);
+                    altitudeMap[x, y] = Mathf.Clamp((float)altitudeMap[x, y], 6, sideLenIndex);
                 }
             }
             linkLogic.finaliseMesh(); 
