@@ -42,6 +42,7 @@ public class FluidLogic : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        dtI = 1;
         linkLogic = FindObjectOfType<LinkBehaviour>();
     }
 
@@ -68,7 +69,7 @@ public class FluidLogic : MonoBehaviour
         if (runSimulation){
             for(int i = 0; i < 100; i ++)
             {
-                EnactTimeStep(cubes, iterations);
+                EnactTimeStep(ref cubes, iterations);
             }
             startStop(iterations);
         }
@@ -78,7 +79,6 @@ public class FluidLogic : MonoBehaviour
     GridCube DefineCube(int size, double diffusion, double viscosity, double dt, int meshSize)
     {
         int N = meshSize / size;
-
         GridCube newCube = new GridCube();
         newCube.size = size;
         newCube.dt = dt;
@@ -100,7 +100,7 @@ public class FluidLogic : MonoBehaviour
         return newCube;
     }
 
-    void EnactTimeStep(GridCube cube, int iterations)
+    void EnactTimeStep(ref GridCube cube, int iterations)
     {
         //{
         double[,,] Vx = cube.Vx;
@@ -235,11 +235,11 @@ public class FluidLogic : MonoBehaviour
 
         int i, j, k;
 
-        for(k = 1; k < N - 2; k++)
+        for(k = 1; k < N - 1; k++)
         {
-            for (j = 1; j < N - 2; j++)
+            for (j = 1; j < N - 1; j++)
             {
-                for (i = 1; i < N - 2; i++)
+                for (i = 1; i < N - 1; i++)
                 {
 
                     x = i - (dt0 * Vx[i, j, k]);
@@ -309,11 +309,11 @@ public class FluidLogic : MonoBehaviour
         double cRecip = 1 / c;
         for(int m = 0; m < iterations; m++)
         {
-            for(int k = 1; k < N - 2; k++)
+            for(int k = 1; k < N - 1; k++)
             {
-                for (int j = 1; j < N - 2; j++)
+                for (int j = 1; j < N - 1; j++)
                 {
-                    for (int i = 1; i < N - 2; i++)
+                    for (int i = 1; i < N - 1; i++)
                     {
                         q[i, j, k] = (q0[i, j, k]
                             + a * (q[i+1, j, k] +
@@ -322,7 +322,9 @@ public class FluidLogic : MonoBehaviour
                                    q[i, j-1, k] +
                                    q[i, j, k+1] +
                                    q[i, j, k-1] )) * cRecip;
-                        
+                        if(j == 41)
+                        {
+                        }
                     }
                 }
             }
@@ -332,19 +334,18 @@ public class FluidLogic : MonoBehaviour
 
     void resetBounds(int dimension, ref double[,,] q, int N)
     {
-        
-        for(int j = 1; j < N - 2; j++)
+        for(int j = 1; j < N - 1; j++)
         {
-            for(int i = 1; i < N - 2; i++)
+            for(int i = 1; i < N - 1; i++)
             {
                 q[i, j, 0    ] = dimension == 3 ? -q[i, j, 1    ] : q[i, j, 1    ];
                 q[i, j, N - 1] = dimension == 3 ? -q[i, j, N - 2] : q[i, j, N - 2];
             }
         }
 
-        for (int k = 1; k < N - 2; k++)
+        for (int k = 1; k < N - 1; k++)
         {
-            for (int i = 1; i < N - 2; i++)
+            for (int i = 1; i < N - 1; i++)
             {
                 q[i, 0, k    ] = dimension == 2 ? -q[i, 1, k    ] : q[i, 1, k    ];
                 q[i, N - 1, k] = dimension == 2 ? -q[i, N - 2, k] : q[i, N - 2, k];
@@ -352,9 +353,9 @@ public class FluidLogic : MonoBehaviour
             }
         }
 
-        for (int k = 1; k < N - 2; k++)
+        for (int k = 1; k < N - 1; k++)
         {
-            for (int j = 1; j < N - 2; j++)
+            for (int j = 1; j < N - 1; j++)
             {
                 q[0, j, k    ] = dimension == 1 ? -q[1, j, k    ] : q[1, j, k    ];
                 q[N - 1, j, k] = dimension == 1 ? -q[N - 2, j, k] : q[N - 2, j, k];
@@ -388,9 +389,9 @@ public class FluidLogic : MonoBehaviour
                                         + q[N - 1, N - 2, N - 1]
                                         + q[N - 1, N - 1, N - 2]);
 
-       for (int k = 1; k < N - 2; k++)
+       for (int k = 1; k < N - 1; k++)
         {
-            for (int i = 1; i < N - 2; i++)
+            for (int i = 1; i < N - 1; i++)
             {
                 int y = ((int)(linkLogic.matAtXY(i * cubes.size, k * cubes.size) / cubes.size)) - 1;
                 int dir = 0;
