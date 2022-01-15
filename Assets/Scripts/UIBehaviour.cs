@@ -21,7 +21,6 @@ public class UIBehaviour : MonoBehaviour
 
     double Roughness;
     double Steepness;
-    int inputLen;
     double risk;
 
     double[] modifiers;
@@ -287,8 +286,7 @@ public class UIBehaviour : MonoBehaviour
         if (FindObjectOfType<TerrainVisualiseLogic>().GetComponentInParent<MeshCollider>().Raycast(ray, out hit, Mathf.Infinity))
         {
             infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(hit.point) * 100));
-            xCoord.text = ((int)hit.point.x).ToString();
-            yCoord.text = ((int)hit.point.y).ToString();
+            updateInfo(hit.point.x.ToString(), hit.point.y.ToString());
             infoPanel.SetActive(true);
         }
     }
@@ -296,10 +294,10 @@ public class UIBehaviour : MonoBehaviour
     void updateInfo(string xInput, string zInput)
     {
         int CubeLen = linkLogic.getFluidCubeSize();
-        int x, z;
+        int x, z;;
         try
         {
-            x = Convert.ToInt32(xInput);
+            x = (int)Math.Truncate(Convert.ToDouble(xInput));
         }
         catch
         {
@@ -308,7 +306,7 @@ public class UIBehaviour : MonoBehaviour
 
         try
         {
-            z = Convert.ToInt32(zInput);
+            z = (int)Math.Truncate(Convert.ToDouble(zInput));
         }
         catch
         {
@@ -317,7 +315,7 @@ public class UIBehaviour : MonoBehaviour
 
         x = Mathf.Clamp(x, 0, linkLogic.getSL());
         z = Mathf.Clamp(z, 0, linkLogic.getSL());
-
+        setRisk();
         infoPanelTextObject2.text = (" \n Local Density: " + (linkLogic.getDensAtPoint(x / CubeLen, (int)linkLogic.matAtXY(x,z) / CubeLen, z / CubeLen) * 100) + "\n Grid Risk: " + risk);
 
         xCoord.text = (x).ToString();
@@ -331,7 +329,7 @@ public class UIBehaviour : MonoBehaviour
         else if (setting == 2) { Steepness = slider.value; }
         //forces sidelength to be an odd power of 2 from ^3 up to ^15. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
         else { sideLengthT = (2 * (int)slider.value) + 1; }
-        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) + 1);
+        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) + 1 +"\n \n \n \n \n seed: " + seed);
     }
 
     void updateFluidSetting(int setting, Slider slider)
@@ -400,7 +398,7 @@ public class UIBehaviour : MonoBehaviour
     }
     public void setRisk()
     {
-        risk = (sideLengthT * Steepness) / (Roughness * inputLen);
+        risk = Math.Round((sideLengthT * Steepness) / (Roughness * linkLogic.getSL()), 5);
     }
 
     public void openCloseSettings()

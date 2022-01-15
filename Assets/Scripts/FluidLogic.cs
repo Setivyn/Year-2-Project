@@ -135,6 +135,7 @@ public class FluidLogic : MonoBehaviour
             {
                 for (int i = 1; i < cube.count - 1; i++)
                 {
+                    
                     dens[i,Iyd,j] += Id;
                 }
             }
@@ -169,14 +170,12 @@ public class FluidLogic : MonoBehaviour
         cube.density = dens;
         cube.d0 = d0;
         //} Pass Back new Values
-
-        
     }
 
     void diffuse(int d, ref double[,,] q0, ref double[,,] q, double diff, double dt, int iter, int N)
     {
         double a = dt * diff * N * N;
-        linearSolve(d, ref q0, q, a, 1 + (6 * a), iter, N);
+        linearSolve(d, ref q0, ref q, a, 1 + (6 * a), iter, N);
     }
 
     void project(ref double[,,] Vx1, ref double[,,] Vy1, ref double[,,] Vz1, ref double[,,] p, ref double[,,] div, int iter, int N)
@@ -201,7 +200,7 @@ public class FluidLogic : MonoBehaviour
         }
 
         resetBounds(0, ref div, N); resetBounds(0, ref p, N);
-        linearSolve(0, ref p, div, 1, 6, iter, N);
+        linearSolve(0, ref p, ref div, 1, 6, iter, N);
 
         for (int k = 1; k < N - 1; k++)
         {
@@ -304,7 +303,7 @@ public class FluidLogic : MonoBehaviour
         }
     }
 
-    void linearSolve(int dimension, ref double[,,] q, double[,,] q0, double a, double c, int iterations, int N)
+    void linearSolve(int dimension, ref double[,,] q, ref double[,,] q0, double a, double c, int iterations, int N)
     {
         double cRecip = 1 / c;
         for(int m = 0; m < iterations; m++)
@@ -322,9 +321,6 @@ public class FluidLogic : MonoBehaviour
                                    q[i, j-1, k] +
                                    q[i, j, k+1] +
                                    q[i, j, k-1] )) * cRecip;
-                        if(j == 41)
-                        {
-                        }
                     }
                 }
             }
