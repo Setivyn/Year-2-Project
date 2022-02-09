@@ -74,7 +74,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         int pointer = 0;
         int[] Triangles = new int[(6 * x * x) + (4 * 6 * x) + 6]; // (sideLen - 1) ^ 2 is number of quads, each quad has 2 triangles with 3 vertices, hence the *6
         int sideLenTo2 = sideLen * sideLen;
-        
         //Set quads for terrain. Each is made of reference pointers into the Vertices array.
         //Top
         for (int i = 0; i < x; i++)
@@ -144,7 +143,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
         //Declare and initialise Vector array, for Mesh Vertices
         Vector3[] outVectors = new Vector3[sideLenTo2 + 4 * (sideLen)]; //Vector Array for all points on matrix and the bottom edge pieces for completer mesh.
         Vector3 inputVector;
-
         //Store each value in Terrain matrix to the array
         int pointer = 0;
         for (int i = 0; i < sideLen; i++)
@@ -156,6 +154,11 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 inputVector.z = j;
                 outVectors[pointer] = inputVector;
                 pointer++;
+
+                if (i == 20 && j == 20)
+                {
+                    Debug.Log(i + ", " + j + ": Vert:" + inputVector.y + ", Ter: " + linkLogic.matAtXY(i, j));
+                }
             }
         }
 

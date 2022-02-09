@@ -115,7 +115,7 @@ public class UIBehaviour : MonoBehaviour
 
         pos[0] = 320; pos[1] = 120; pos[2] = 0;
         
-        InitPanelText(settPanel, ref settPanelTxt2, out settPanelTextObject2, pos, "Roughness; \n Steepness; \n sideLen;", "StTxt2");
+        InitPanelText(settPanel, ref settPanelTxt2, out settPanelTextObject2, pos, "Roughness; \n Steepness; \n sideLen; \n seed; ", "StTxt2");
 
         float[] clamp = { 0, 2f };
         pos[0] = 330; pos[1] = 90; pos[2] = 0;
@@ -129,7 +129,7 @@ public class UIBehaviour : MonoBehaviour
         InitSlider(settPanel, ref steepSlider, "steepSlider", clamp, pos, "Steepness");
         steepSlider.onValueChanged.AddListener(delegate { updateSetting(2, steepSlider); });
 
-        clamp[0] = 1f; clamp[1] = 6f;
+        clamp[0] = 2f; clamp[1] = 5f;
         pos[0] = 355; pos[1] = 30; pos[2] = 0;
 
         InitSlider(settPanel, ref lenSlider, "lenSlider", clamp, pos, "Length");
@@ -329,7 +329,7 @@ public class UIBehaviour : MonoBehaviour
         else if (setting == 2) { Steepness = slider.value; }
         //forces sidelength to be an odd power of 2 from ^3 up to ^15. these values always have a factor of 3 when 1 is added, allowing fluid dynamics to be less accurate but faster.
         else { sideLengthT = (2 * (int)slider.value) + 1; }
-        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) + 1 +"\n \n \n \n \n seed: " + seed);
+        settPanelTextObject2.text = "Roughness;" + Math.Round(Roughness, 2) + "\n Steepness;" + Math.Round(Steepness, 2) + "\n sideLen; " + (Math.Pow(2, sideLengthT) + 1 +"\n seed: " + seed);
     }
 
     void updateFluidSetting(int setting, Slider slider)

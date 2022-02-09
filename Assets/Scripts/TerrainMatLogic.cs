@@ -65,9 +65,7 @@ public class TerMat
             SetEdgesForCenter(Center, sidePow - 1);
         });
 
-
-        /*Thread.Sleep(500);
-        linkLogic.updateMesh();*/
+        
 
         if (sidePow > 1) { DiamondSquare(sidePow - 1); }
         else 
