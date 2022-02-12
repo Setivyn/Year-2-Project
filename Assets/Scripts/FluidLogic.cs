@@ -67,13 +67,13 @@ public class FluidLogic : MonoBehaviour
     void simulateLoop(int iterations)
     {
         if (runSimulation){
-            for(int i = 0; i < 100; i ++)
+            for(int i = 0; i < (int)(3 * cubes.count * cubes.size / (cubes.dt)); i ++)
             {
                 EnactTimeStep(ref cubes, iterations);
+                
             }
             startStop(iterations);
         }
-        
     }
 
     GridCube DefineCube(int size, double diffusion, double viscosity, double dt, int meshSize)

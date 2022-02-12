@@ -11,7 +11,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
 {
     LinkBehaviour linkLogic;
     [SerializeField] Material meshMater;
-    int cubeN;
 
     private void Awake()
     {
@@ -155,10 +154,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 outVectors[pointer] = inputVector;
                 pointer++;
 
-                if (i == 20 && j == 20)
-                {
-                    Debug.Log(i + ", " + j + ": Vert:" + inputVector.y + ", Ter: " + linkLogic.matAtXY(i, j));
-                }
             }
         }
 
@@ -225,7 +220,6 @@ public class TerrainVisualiseLogic : MonoBehaviour
                 z = (int)Math.Floor((double)k / size);
 
                 y = (int)linkLogic.matAtXY(i, k) / size;
-                //Debug.Log("x: " + i + "; " + x + ", z: " + k + "; " + z + ", y: " + y + ", ptn: " + pointer) ;
                 val = values[x, y, z];
 
                 values1D[pointer] = val;

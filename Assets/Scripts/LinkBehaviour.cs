@@ -10,7 +10,7 @@ public class LinkBehaviour : MonoBehaviour
     UIBehaviour UILogic;
     TerrainVisualiseLogic visLogic;
 
-    // Start is called before the first frame update
+    // Awake is called before the first frame update
     void Awake()
     {
         fluidLogic = FindObjectOfType<FluidLogic>();
